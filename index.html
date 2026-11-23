@@ -1,0 +1,1765 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f141c" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563eb'/%3E%3Cpath d='M18 30 22 19Q23 16 26 16H38Q41 16 42 19L46 30' fill='none' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/%3E%3Crect x='11' y='29' width='42' height='15' rx='5' fill='%23fff'/%3E%3Ccircle cx='19' cy='36.5' r='3.2' fill='%232563eb'/%3E%3Ccircle cx='45' cy='36.5' r='3.2' fill='%232563eb'/%3E%3Crect x='26' y='33.5' width='12' height='6' rx='1.5' fill='%23fbbf24'/%3E%3Crect x='14' y='43' width='9' height='8' rx='2.5' fill='%23fff'/%3E%3Crect x='41' y='43' width='9' height='8' rx='2.5' fill='%23fff'/%3E%3C/svg%3E">
+<script>
+  // ใช้ธีมที่บันทึกไว้ก่อนหน้าเว็บแสดงผล (กันหน้าจอกะพริบ)
+  try{ const t=localStorage.getItem('plate-dashboard-theme'); if(t==='light'||t==='dark') document.documentElement.dataset.theme=t; }catch(e){}
+</script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dashboard ป้ายทะเบียน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6f9; --surface:#ffffff; --surface-2:#f0f3f7; --border:#dfe4ec;
+  --text:#18212f; --muted:#5f6b7c; --accent:#2563eb; --accent-soft:#e3ecff;
+  --ok:#15803d; --ok-soft:#dcf5e5; --warn:#b45309; --warn-soft:#fdf0d9;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --grid:#e1e0d9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f141c; --surface:#171e29; --surface-2:#1e2633; --border:#2b3545;
+    --text:#e6ebf2; --muted:#93a0b4; --accent:#6c9bff; --accent-soft:#1d2a47;
+    --ok:#4ade80; --ok-soft:#163323; --warn:#fbbf24; --warn-soft:#3a2c10;
+    --shadow:none;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --grid:#2c2c2a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f141c; --surface:#171e29; --surface-2:#1e2633; --border:#2b3545;
+  --text:#e6ebf2; --muted:#93a0b4; --accent:#6c9bff; --accent-soft:#1d2a47;
+  --ok:#4ade80; --ok-soft:#163323; --warn:#fbbf24; --warn-soft:#3a2c10;
+  --shadow:none;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --grid:#2c2c2a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;font-size:15px;line-height:1.5}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px}
+h1{font-size:22px;margin:0;font-weight:700}
+.sub{color:var(--muted);font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+button,.btn{font:inherit;font-size:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover,.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+.kpi .label{color:var(--muted);font-size:13px}
+.kpi .value{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+h2{font-size:16px;margin:0 0 12px;font-weight:600}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:12px}
+.filters label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4px}
+input,select{font:inherit;font-size:14px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;min-width:0}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:13px;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--surface)}
+td.num{font-variant-numeric:tabular-nums}
+tbody tr:hover{background:var(--surface-2)}
+.plate{font-weight:600}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:500}
+.pill.out{background:var(--ok-soft);color:var(--ok)}
+.pill.in{background:var(--warn-soft);color:var(--warn)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:grid;grid-template-columns:90px 1fr 40px;gap:8px;align-items:center;font-size:13px}
+.bar-track{background:var(--surface-2);border-radius:6px;height:18px;overflow:hidden}
+.bar-fill{background:var(--accent);height:100%;border-radius:6px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media (max-width:1000px){.grid3{grid-template-columns:1fr}}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.chart-head h2{margin:0}
+.chart-sub{color:var(--muted);font-size:13px;margin-top:2px}
+.legend{display:flex;gap:12px;font-size:13px;font-weight:500;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chart{position:relative}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{fill:var(--muted);font-size:11px;font-family:inherit}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.12);white-space:nowrap;display:none;z-index:5}
+.tip b{display:block;margin-bottom:2px}
+.cat-row{margin-bottom:12px}
+.cat-row .top{display:flex;justify-content:space-between;font-size:14px;font-weight:500;margin-bottom:4px}
+.cat-track{height:10px;background:var(--surface-2);border-radius:5px;overflow:hidden}
+.cat-fill{height:100%;background:var(--s1);border-radius:5px}
+.donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center}
+.donut-wrap svg{width:170px;height:170px;flex:none}
+.donut-legend{display:flex;flex-direction:column;gap:10px;font-size:14px;min-width:150px}
+.donut-legend div{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center}
+.donut-legend .pct{font-weight:600;font-variant-numeric:tabular-nums}
+.donut-legend .sw{width:12px;height:12px;border-radius:50%}
+.hours{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;align-items:end;height:120px}
+.hours div{background:var(--accent);border-radius:3px 3px 0 0;min-height:2px;opacity:.85}
+.hours-axis{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;font-size:10px;color:var(--muted);text-align:center;margin-top:4px}
+.empty{color:var(--muted);text-align:center;padding:28px}
+.drop{border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.foot{color:var(--muted);font-size:12px;margin-top:8px}
+.chart svg,.donut-wrap svg{touch-action:pan-y}
+.conn{margin-bottom:16px;padding:12px 16px}
+.conn-row{display:grid;grid-template-columns:1fr auto auto;gap:8px}
+.conn-status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.conn-status .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.conn-status.live .dot{background:var(--ok);animation:pulse 1.6s infinite}
+.conn-status.live{color:var(--ok)}
+.conn-status.err .dot{background:#d03b3b}
+.conn-status.err{color:#d03b3b}
+.conn-status.loading .dot{background:var(--warn)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+body.live .local-only{display:none}
+/* ไม่ทราบจังหวัด */
+.warn-ic{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--warn-soft);color:var(--warn);font-weight:700;font-size:12px;line-height:1;flex:none;vertical-align:-3px;margin-left:6px}
+.prov-warn{color:var(--warn);font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.prov-warn .warn-ic{margin-left:0}
+tr.row-warn td{background:color-mix(in srgb,var(--warn-soft) 55%,transparent)}
+table.resp td.plate .warn-ic{align-self:center}
+/* แก้ไขป้าย */
+.edit-btn{display:inline-flex;align-items:center;gap:4px;font-size:13px;padding:4px 10px}
+.edit-btn svg{width:14px;height:14px}
+.tag-edit{display:inline-block;margin-left:6px;font-size:11px;font-weight:500;padding:1px 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent);vertical-align:2px}
+dialog.modal{border:1px solid var(--border);border-radius:14px;padding:0;background:var(--surface);color:var(--text);width:min(420px,calc(100% - 24px));box-shadow:0 20px 50px rgba(0,0,0,.3)}
+dialog.modal::backdrop{background:rgba(10,14,22,.5)}
+.modal form{padding:20px;display:flex;flex-direction:column;gap:14px}
+.modal h3{margin:0;font-size:18px}
+.modal .meta{font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:8px 10px}
+.modal label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.modal input,.modal select{font-size:16px;width:100%}
+.modal .m-actions{display:flex;justify-content:flex-end;gap:8px}
+.modal .m-msg{font-size:13px;min-height:1em}
+.modal .m-msg.err{color:#d03b3b}
+.modal .m-msg.info{color:var(--warn)}
+.modal .m-msg.info:empty{display:none}
+.settings{margin-top:8px;font-size:13px}
+.settings summary{cursor:pointer;color:var(--muted)}
+.settings .s-row{display:grid;grid-template-columns:1fr 200px auto;gap:8px;margin-top:8px}
+.settings .s-hint{color:var(--muted);margin-top:6px}
+/* หน้าแอดมิน */
+body:not(.admin) .admin-only{display:none !important}
+body.admin .public-only{display:none !important}
+.admin-panel{margin-bottom:16px;border-color:var(--accent);display:flex;flex-direction:column;gap:14px}
+.admin-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.admin-head h2{display:flex;align-items:center;gap:8px;margin:0 0 2px}
+.admin-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
+.admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+.admin-sec{border-top:1px solid var(--border);padding-top:12px}
+.admin-sec h3{font-size:14px;margin:0 0 8px;font-weight:600}
+.admin-sec .s-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.admin-sec .s-hint{color:var(--muted);margin-top:6px;font-size:13px}
+/* แท็บย่อยในหน้าแอดมิน */
+.admin-tabs{display:flex;gap:4px;padding:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;overflow-x:auto;scrollbar-width:none}
+.admin-tabs button{flex:1;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:14px;padding:9px 12px;border-radius:9px;white-space:nowrap;cursor:pointer}
+.admin-tabs button:hover{color:var(--text)}
+.admin-tabs button.active{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.admin-panel .admin-sec[data-atab]:not(.atab-on){display:none}
+.admin-panel .admin-sec.atab-first{border-top:none;padding-top:0}
+/* เมนู 3 แท็บ */
+[hidden]{display:none !important}
+.tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs a{display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px 10px 0 0;color:var(--muted);text-decoration:none;font-weight:600;font-size:15px;white-space:nowrap;border:1px solid transparent;border-bottom:none;margin-bottom:-1px}
+.tabs a:hover{color:var(--text);background:var(--surface-2)}
+.tabs a.active{color:var(--accent);background:var(--surface);border-color:var(--border);border-bottom:1px solid var(--surface)}
+body:not(.has-dash) .dash-only{display:none !important}
+.login-card{max-width:400px;margin:24px auto;text-align:center;padding:28px 24px}
+.login-card .login-ic{font-size:36px;line-height:1;margin-bottom:6px}
+.login-card h2{margin:0 0 4px;font-size:20px}
+.login-card form{display:flex;flex-direction:column;gap:12px;margin-top:18px;text-align:left}
+.login-card label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.login-card input{font-size:16px;width:100%;padding:10px 12px}
+.login-card .btn{min-height:46px;font-size:16px;justify-content:center}
+.m-msg.err{color:#d03b3b} .m-msg.info{color:var(--warn)}
+.viewer-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.viewer-bar button{font-size:13px;padding:5px 12px}
+/* หน้าไม้กั้น (ยาม) */
+.guard-card{margin-bottom:16px;display:flex;flex-direction:column;gap:16px}
+.guard-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.guard-head h2{margin:0}
+.guard-status{display:flex;align-items:center;justify-content:center;gap:12px;font-size:26px;font-weight:700;padding:18px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);text-align:center;flex-wrap:wrap}
+.guard-status .dot{width:20px;height:20px;border-radius:50%;background:var(--muted);flex:none}
+.guard-status small{display:block;width:100%;font-size:13px;font-weight:400;color:var(--muted)}
+.guard-status.open{color:var(--warn);background:var(--warn-soft)} .guard-status.open .dot{background:var(--warn)}
+.guard-status.closed{color:var(--ok);background:var(--ok-soft)} .guard-status.closed .dot{background:var(--ok)}
+.guard-status.offline{color:var(--muted)}
+.guard-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.guard-btns button{min-height:96px;font-size:24px;font-weight:700;border-radius:16px;border:none;cursor:pointer;color:#fff;transition:transform .1s,filter .15s}
+.guard-btns button:active{transform:scale(.97)}
+.guard-btns button:disabled{filter:grayscale(.6) opacity(.6);cursor:wait}
+.guard-btns .g-open{background:#16a34a} .guard-btns .g-close{background:#dc2626}
+.guard-list{display:flex;flex-direction:column;gap:8px}
+.g-item{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--border);border-radius:12px;padding:10px 14px}
+.g-item.unreg{border-color:color-mix(in srgb,var(--warn) 50%,var(--border));background:color-mix(in srgb,var(--warn-soft) 45%,transparent)}
+.g-item .g-plate{font-size:20px;font-weight:700}
+.g-item .g-sub{font-size:13px;color:var(--muted)}
+.g-item .g-time{text-align:right;font-size:13px;color:var(--muted);white-space:nowrap}
+.g-item .g-time b{display:block;font-size:17px;color:var(--text)}
+.g-dir{font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;color:#fff;white-space:nowrap}
+.g-dir.in{background:#16a34a} .g-dir.out{background:#dc2626}
+.reg-yes{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--ok-soft);color:var(--ok)}
+.reg-no{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
+/* จัดการบัญชี */
+.user-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px}
+.user-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.u-item{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:8px 12px;flex-wrap:wrap}
+.u-item .u-name{font-weight:600}
+.u-item .u-sub{font-size:12.5px;color:var(--muted)}
+.u-item .b{display:flex;gap:6px}
+.u-item .b button{font-size:13px;padding:4px 10px}
+.u-item .b .del{color:#d03b3b}
+/* ไม้กั้น */
+.gate-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.gate-status{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600}
+.gate-status .dot{width:12px;height:12px;border-radius:50%;background:var(--muted);flex:none}
+.gate-status.open .dot{background:var(--warn)} .gate-status.open{color:var(--warn)}
+.gate-status.closed .dot{background:var(--ok)} .gate-status.closed{color:var(--ok)}
+.gate-status.offline{color:var(--muted)}
+.gate-status small{font-weight:400;color:var(--muted);font-size:12.5px}
+.gate-btns{display:flex;gap:8px}
+.gate-btns button{min-width:130px;min-height:42px;font-weight:600}
+.pill.gopen{background:var(--warn-soft);color:var(--warn)}
+.pill.gclose{background:var(--ok-soft);color:var(--ok)}
+.pill.noentry{background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
+.gate-today{display:flex;gap:6px;flex-wrap:wrap;font-size:12.5px}
+.gate-today span{background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:2px 10px;color:var(--muted)}
+.gate-today b{color:var(--text)}
+/* ป้ายที่ลงทะเบียน */
+.cat-badge{display:inline-flex;align-items:center;gap:5px;margin-left:6px;font-size:11.5px;font-weight:500;padding:1px 8px 1px 6px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);vertical-align:2px;white-space:nowrap}
+.cat-badge i{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.cat-badge.out{color:var(--muted);border-style:dashed}
+.c-dir{background:#6250d6}.c-teach{background:var(--s1)}.c-staff{background:var(--s3)}.c-inside{background:var(--s2)}.c-out{background:var(--muted)}
+:root[data-theme="dark"] .c-dir{background:#9085e9}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .c-dir{background:#9085e9}}
+dialog.modal.wide{width:min(720px,calc(100% - 24px));max-height:calc(100dvh - 24px)}
+.reg-wrap{padding:20px;display:flex;flex-direction:column;gap:12px}
+.reg-head{display:flex;justify-content:space-between;align-items:center}
+.reg-head h3{margin:0;font-size:18px}
+.reg-src{font-size:12.5px;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:8px 10px}
+.modal form.reg-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0}
+.reg-form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.reg-form .full{grid-column:1/-1}
+.reg-form input,.reg-form select{width:100%;font-size:15px}
+.reg-btns{display:flex;justify-content:flex-end;gap:8px}
+.reg-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px}
+.reg-tools input{flex:1;min-width:160px}
+.reg-counts{display:flex;gap:6px;flex-wrap:wrap}
+.reg-counts .cat-badge{margin-left:0}
+.reg-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+.reg-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:8px 12px}
+.reg-item .p{font-weight:600;font-size:15px}
+.reg-item .p .cat-badge{margin-left:8px}
+.reg-item .s{font-size:12.5px;color:var(--muted)}
+.reg-item .b{display:flex;gap:6px}
+.reg-item .b button{font-size:13px;padding:4px 10px}
+.reg-item .b .del{color:#d03b3b}
+/* กล่องแจ้งเตือนขวาล่าง */
+.toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:100;max-width:360px;width:calc(100% - 32px);pointer-events:none}
+.toast{pointer-events:auto;display:grid;grid-template-columns:28px 1fr 24px;gap:10px;align-items:start;background:var(--surface);color:var(--text);border:1px solid var(--border);border-left:4px solid var(--warn);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);cursor:pointer;animation:toastIn .25s ease-out}
+.toast.out{animation:toastOut .25s ease-in forwards}
+.toast .t-ic{width:28px;height:28px;border-radius:50%;background:var(--warn-soft);color:var(--warn);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+.toast .t-title{font-weight:600;font-size:14px}
+.toast .t-msg{font-size:13px;color:var(--muted)}
+.toast .t-x{background:none;border:none;color:var(--muted);font-size:18px;padding:0;line-height:1;cursor:pointer}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateX(24px)}}
+.theme-btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.theme-btn svg{width:16px;height:16px;flex:none}
+body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .2s,border-color .2s}
+
+/* ---------- มือถือ ---------- */
+@media (max-width:640px){
+  .wrap{padding:16px 12px 32px}
+  h1{font-size:20px}
+  header{flex-direction:column;align-items:stretch}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .actions .theme-btn{grid-column:1/-1}
+  table.resp td.act{grid-column:1/-1;padding-top:4px}
+  table.resp td.act::before{content:none}
+  table.resp td.act .edit-btn{width:100%;justify-content:center;min-height:40px}
+  .settings .s-row,.admin-sec .s-row{grid-template-columns:1fr}
+  .admin-actions{display:grid;grid-template-columns:1fr;width:100%}
+  .gate-btns{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .user-form{grid-template-columns:1fr}
+  .user-form button{min-height:44px}
+  .tabs a{padding:10px 12px;font-size:14px;flex:1;justify-content:center}
+  .guard-status{font-size:22px}
+  .guard-btns button{min-height:88px;font-size:21px}
+  .g-item{grid-template-columns:1fr auto}
+  .g-item .g-dir{grid-row:1;grid-column:2}
+  .g-item .g-time{grid-column:1/-1;text-align:left}
+  .g-item .g-time b{display:inline;margin-right:6px}
+  .login-card{margin:8px auto}
+  .gate-btns button{min-width:0;min-height:52px;font-size:16px}
+  .admin-actions button,.admin-actions .btn{min-height:44px;justify-content:center;text-align:center}
+  .modal form.reg-form{grid-template-columns:1fr}
+  .reg-wrap{padding:16px}
+  .reg-btns button{flex:1;min-height:44px}
+  .reg-item{grid-template-columns:1fr}
+  .reg-item .b button{flex:1;min-height:40px}
+  .toasts{right:12px;bottom:12px;width:calc(100% - 24px);max-width:none}
+  .actions .btn,.actions button{text-align:center;padding:10px 8px;min-height:44px;display:flex;align-items:center;justify-content:center}
+  .drop{display:none}
+  .conn-row{grid-template-columns:1fr 1fr}
+  .conn-row input{grid-column:1/-1}
+  .conn-row button{min-height:44px}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .card{padding:14px;border-radius:10px}
+  .kpi .value{font-size:22px}
+  .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .filters label:first-child{grid-column:1/-1}
+  .filters button{grid-column:1/-1;min-height:44px}
+  input,select{font-size:16px;padding:9px 10px;width:100%}
+  .donut-wrap svg{width:150px;height:150px}
+  .hours{height:90px}
+
+  /* ตารางเปลี่ยนเป็นการ์ด */
+  table.resp thead{display:none}
+  table.resp,table.resp tbody,table.resp tr,table.resp td{display:block;width:100%}
+  table.resp tr{display:grid;grid-template-columns:1fr 1fr;column-gap:12px;row-gap:6px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--surface)}
+  table.resp tbody tr:hover{background:var(--surface)}
+  table.resp td{display:flex;flex-direction:column;border:none;padding:0;white-space:normal;width:auto}
+  table.resp td::before{content:attr(data-label);color:var(--muted);font-size:12px;line-height:1.3}
+  table.resp td.empty{grid-column:1/-1;text-align:center}
+  table.resp td.empty::before{content:none}
+  table.resp td.plate{grid-column:1/-1;font-size:17px;border-bottom:1px solid var(--border);padding-bottom:6px}
+  table.resp td.plate::before{content:none}
+  table.resp .pill{align-self:flex-start}
+  .table-wrap{overflow:visible}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ระบบป้ายทะเบียน</h1>
+      <div class="sub" id="subtitle">ข้อมูลรถเข้า–ออก</div>
+    </div>
+    <div class="actions">
+      <button id="themeBtn" class="theme-btn" aria-label="สลับโทนมืด/สว่าง" title="สลับโทนมืด/สว่าง"></button>
+      <button id="exportBtn" class="dash-only">ส่งออก CSV</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="เมนู">
+    <a href="#gate" data-view="gate"><span aria-hidden="true">🚧</span> ไม้กั้น</a>
+    <a href="#dashboard" data-view="dashboard"><span aria-hidden="true">📊</span> Dashboard</a>
+    <a href="#admin" data-view="admin"><span aria-hidden="true">⚙️</span> แอดมิน</a>
+  </nav>
+
+  <!-- หน้าเข้าสู่ระบบ (ใช้ร่วมทั้ง 3 แท็บ) -->
+  <section class="card login-card" id="loginView" hidden>
+    <div class="login-ic" id="loginIc">🔒</div>
+    <h2 id="loginTitle">เข้าสู่ระบบ</h2>
+    <div class="chart-sub" id="loginSub"></div>
+    <form id="viewLoginForm" autocomplete="on">
+      <label id="vlUserRow">ชื่อผู้ใช้<input id="vlUser" autocomplete="username" autocapitalize="off"></label>
+      <label>รหัสผ่าน<input id="vlPass" type="password" autocomplete="current-password" required></label>
+      <div class="m-msg" id="vlMsg"></div>
+      <button type="submit" class="btn primary" id="vlSubmit">เข้าสู่ระบบ</button>
+    </form>
+  </section>
+
+  <!-- แท็บ 1: หน้าเปิด-ปิดไม้กั้น (ยาม) -->
+  <section id="gateView" hidden>
+    <div class="card guard-card">
+      <div class="guard-head">
+        <div><h2>ควบคุมไม้กั้น</h2><div class="chart-sub" id="guardSub">ข้อมูลอัปเดตทุก 3 วินาที</div></div>
+        <button id="guardLogout">ออกจากระบบ</button>
+      </div>
+      <div class="guard-status" id="guardStatus"><span class="dot"></span><span>กำลังตรวจสอบสถานะ…</span></div>
+      <div class="guard-btns">
+        <button class="g-open" id="guardOpen">▲ เปิดไม้กั้น</button>
+        <button class="g-close" id="guardClose">▼ ปิดไม้กั้น</button>
+      </div>
+      <div class="s-hint">ป้ายที่ลงทะเบียน ไม้กั้นเปิดเองและปิดใน 30 วินาที · รถที่ไม่ได้ลงทะเบียน ให้ตรวจสอบแล้วกดเปิดเอง</div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <h2>รถที่เพิ่งผ่านกล้อง</h2>
+      <div class="guard-list" id="guardRecent"><div class="empty">กำลังโหลด…</div></div>
+    </div>
+    <div class="card">
+      <h2>ประวัติไม้กั้นล่าสุด</h2>
+      <div class="guard-list" id="guardLog"><div class="empty">กำลังโหลด…</div></div>
+    </div>
+  </section>
+
+  <section class="card admin-panel admin-only" id="adminPanel">
+    <div class="admin-head">
+      <div>
+        <h2><span class="admin-dot"></span>หน้าแอดมิน</h2>
+        <div class="chart-sub">เข้าสู่ระบบในชื่อ <b id="adminName">admin</b> · แก้ไขป้ายได้จากปุ่ม “แก้ไข” ในตารางรายการเข้า–ออก</div>
+      </div>
+      <div class="admin-actions">
+        <button id="regBtn" class="theme-btn btn primary" title="จัดการป้ายทะเบียนบุคลากร"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg><span>เพิ่ม / จัดการป้ายที่ลงทะเบียน</span></button>
+        <button id="logoutBtn" class="theme-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>ออกจากระบบ</span></button>
+      </div>
+    </div>
+    <nav class="admin-tabs" id="adminTabs" aria-label="เมนูแอดมิน">
+      <button type="button" data-atab="gate">🚧 ไม้กั้น</button>
+      <button type="button" data-atab="users">👥 บัญชีบุคลากร</button>
+      <button type="button" data-atab="conn">🔗 การเชื่อมต่อ</button>
+      <button type="button" data-atab="data">🗂️ จัดการข้อมูล</button>
+    </nav>
+    <div class="admin-sec" data-atab="gate" style="order:1">
+      <h3>รหัสผ่านหน้าไม้กั้น (สำหรับยาม)</h3>
+      <div class="s-row">
+        <input id="gatePwNew" type="password" placeholder="ตั้งรหัสผ่านใหม่ (อย่างน้อย 4 ตัว)" autocomplete="new-password">
+        <button id="gatePwSave">บันทึกรหัสผ่าน</button>
+      </div>
+      <div class="s-hint" id="gatePwHint">กำลังตรวจสอบ…</div>
+    </div>
+    <div class="admin-sec" data-atab="users">
+      <h3>บัญชีบุคลากร (เข้าดูหน้า Dashboard)</h3>
+      <form class="user-form" id="userForm" autocomplete="off">
+        <input id="uName" placeholder="ชื่อ-นามสกุล" maxlength="60">
+        <input id="uUser" placeholder="username (อังกฤษ/ตัวเลข)" maxlength="30" autocapitalize="off">
+        <input id="uPass" type="password" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)" autocomplete="new-password">
+        <button type="submit" class="btn primary" id="uAdd">＋ เพิ่มบัญชี</button>
+      </form>
+      <div class="s-hint" id="userMsg"></div>
+      <div class="user-list" id="userList"></div>
+    </div>
+    <div class="admin-sec" data-atab="gate">
+      <h3>ควบคุมไม้กั้น</h3>
+      <div class="gate-row">
+        <div class="gate-status" id="gateStatus"><span class="dot"></span>กำลังตรวจสอบสถานะไม้กั้น…</div>
+        <div class="gate-btns">
+          <button class="btn primary" id="gateOpen">▲ เปิดไม้กั้น</button>
+          <button class="btn" id="gateClose">▼ ปิดไม้กั้น</button>
+        </div>
+      </div>
+      <div class="s-hint">ป้ายที่ลงทะเบียนไว้ ไม้กั้นจะเปิดเองเมื่อกล้องอ่านป้ายได้ และปิดเองใน 30 วินาที · รถที่ไม่ได้ลงทะเบียน ให้กดปุ่มด้านบน (Pi รับคำสั่งภายใน ~3 วินาที)</div>
+    </div>
+    <div class="admin-sec" data-atab="conn">
+      <h3>แหล่งข้อมูล Google Sheet</h3>
+      <div class="conn-row">
+        <input id="sheetUrl" placeholder="วางลิงก์ Google Sheet ที่นี่ (https://docs.google.com/spreadsheets/d/...)">
+        <select id="interval">
+          <option value="5">อัปเดตทุก 5 วินาที</option>
+          <option value="10" selected>อัปเดตทุก 10 วินาที</option>
+          <option value="30">อัปเดตทุก 30 วินาที</option>
+          <option value="60">อัปเดตทุก 1 นาที</option>
+        </select>
+        <button class="btn primary" id="connBtn">เชื่อมต่อ</button>
+      </div>
+    </div>
+    <div class="admin-sec" data-atab="conn">
+      <h3>บันทึกการแก้ไขลง Google Sheet (Apps Script)</h3>
+      <div class="s-row">
+        <input id="scriptUrl" placeholder="URL เว็บแอป Apps Script (https://script.google.com/macros/s/.../exec)">
+        <button id="scriptSave">บันทึก</button>
+      </div>
+      <div class="s-hint" id="scriptHint">วิธีติดตั้งอยู่ในไฟล์ google-apps-script.gs — ถ้ายังไม่ตั้งค่า การแก้ไขจะบันทึกไว้เฉพาะในเครื่องนี้</div>
+      <div class="s-hint" id="syncRow">ชื่อและตำแหน่งจาก “ป้ายที่ลงทะเบียน” จะถูกเขียนลงคอลัมน์ Owner_Name / Position และแท็บ Owners ในชีต
+        <button type="button" id="syncOwnersBtn" style="font-size:12px;padding:3px 10px">เติมชื่อและตำแหน่งลงชีตตอนนี้</button></div>
+      <div class="s-hint" id="ovrRow" hidden><span id="ovrText"></span> <button type="button" id="ovrSync" style="font-size:12px;padding:3px 10px">อัปโหลดขึ้น Google Sheet</button></div>
+    </div>
+    <div class="admin-sec" data-atab="data">
+      <h3>ระยะเวลาเก็บข้อมูล</h3>
+      <div class="s-hint" id="retentionText" style="margin-top:0"></div>
+      <div class="s-hint"><button type="button" id="cleanupBtn" style="font-size:12px;padding:3px 10px">ลบข้อมูลที่เก่ากว่า 3 เดือนตอนนี้</button></div>
+    </div>
+    <div class="admin-sec local-only" data-atab="data">
+      <h3>ข้อมูลในเครื่อง</h3>
+      <div class="admin-actions">
+        <label class="btn">นำเข้าไฟล์ (CSV / Excel)<input type="file" id="file" accept=".csv,.xlsx,.xls" hidden></label>
+        <button id="sampleBtn">โหลดข้อมูลตัวอย่าง</button>
+        <button id="clearBtn">ล้างข้อมูล</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- แท็บ 2: Dashboard (บุคลากร) — แท็บแอดมินก็แสดงส่วนนี้ต่อจากแผงแอดมิน -->
+  <div id="dashView" hidden>
+  <div class="viewer-bar" id="viewerBar">
+    <span>เข้าสู่ระบบในชื่อ <b id="viewerName"></b></span>
+    <button id="viewerLogout">ออกจากระบบ</button>
+  </div>
+
+  <section class="card conn">
+    <div class="conn-status" id="connStatus" style="margin-top:0"><span class="dot"></span>กำลังโหลดข้อมูล…</div>
+  </section>
+
+  <div class="drop local-only admin-only" id="drop">ลากไฟล์ CSV / Excel มาวางที่นี่ — คอลัมน์: Plate_Number, Province, Status, Entry_Date, Entry_Time, Exit_Date, Exit_Time, Duration, Entry_Event_ID, Exit_Event_ID, Entry_Epoch</div>
+
+  <section class="kpis">
+    <div class="card kpi"><div class="label">จำนวนครั้งที่เข้า</div><div class="value" id="kTotal">0</div></div>
+    <div class="card kpi"><div class="label">ป้ายทะเบียน (ไม่ซ้ำ)</div><div class="value" id="kPlates">0</div></div>
+    <div class="card kpi"><div class="label">ยังอยู่ภายใน</div><div class="value" id="kInside">0</div></div>
+    <div class="card kpi"><div class="label">ระยะเวลาเฉลี่ย</div><div class="value" id="kAvg">–</div></div>
+    <div class="card kpi"><div class="label">บุคลากร / ภายนอก (ครั้ง)</div><div class="value" id="kStaff">–</div></div>
+  </section>
+
+  <section class="grid3">
+    <div class="card">
+      <div class="chart-head">
+        <div><h2>แนวโน้มรายวัน</h2><div class="chart-sub">จำนวนครั้งที่เข้า เทียบ ป้ายไม่ซ้ำ</div></div>
+        <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>เข้า</span><span><i class="sw" style="background:var(--s2)"></i>ป้ายไม่ซ้ำ</span></div>
+      </div>
+      <div class="chart" id="trend"></div>
+    </div>
+    <div class="card">
+      <div class="chart-head"><div><h2>ป้ายที่เข้าบ่อย</h2><div class="chart-sub">จำนวนครั้งที่เข้า แยกตามป้ายทะเบียน</div></div></div>
+      <div id="topPlates"></div>
+    </div>
+    <div class="card">
+      <div class="chart-head"><div><h2>สัดส่วนตามช่วงเวลา</h2><div class="chart-sub">การเข้าแยกตามช่วงของวัน</div></div></div>
+      <div class="chart donut-wrap" id="donut"></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom:16px">
+    <div>
+      <h2>ช่วงเวลาที่เข้า (ชั่วโมง)</h2>
+      <div class="hours" id="hourBars"></div>
+      <div class="hours-axis" id="hourAxis"></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom:16px">
+    <h2>รายการเข้า–ออก</h2>
+    <div class="filters">
+      <label>ค้นหาป้าย / ชื่อเจ้าของ<input id="fPlate" placeholder="เช่น กล7153 หรือ ชื่อ"></label>
+      <label>จังหวัด<select id="fProv"><option value="">ทั้งหมด</option></select></label>
+      <label>ประเภท<select id="fType"><option value="">ทั้งหมด</option></select></label>
+      <label>สถานะ<select id="fStatus"><option value="">ทั้งหมด</option></select></label>
+      <label>ตั้งแต่วันที่<input type="date" id="fFrom"></label>
+      <label>ถึงวันที่<input type="date" id="fTo"></label>
+      <button id="resetBtn">ล้างตัวกรอง</button>
+    </div>
+    <div class="table-wrap">
+      <table class="resp">
+        <thead><tr>
+          <th data-k="plate">ป้ายทะเบียน</th>
+          <th data-k="owner">เจ้าของ</th>
+          <th data-k="province">จังหวัด</th>
+          <th data-k="status">สถานะ</th>
+          <th data-k="entryTs">วันที่เข้า</th>
+          <th data-k="entryTs">เวลาเข้า</th>
+          <th data-k="exitTs">วันที่ออก</th>
+          <th data-k="exitTs">เวลาออก</th>
+          <th data-k="durSec">ระยะเวลา</th>
+          <th class="admin-only"></th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="foot" id="count"></div>
+  </section>
+
+  <section class="card" style="margin-bottom:16px">
+    <div class="chart-head">
+      <div><h2>ประวัติการเปิด–ปิดไม้กั้น</h2><div class="chart-sub">จากแท็บ GateLog ใน Google Sheet</div></div>
+      <div class="gate-today" id="gateToday"></div>
+    </div>
+    <div class="table-wrap">
+      <table class="resp">
+        <thead><tr><th>วันที่</th><th>เวลา</th><th>การทำงาน</th><th>ที่มา</th><th>ป้ายทะเบียน</th></tr></thead>
+        <tbody id="gateLogRows"><tr><td colspan="5" class="empty">กำลังโหลด…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="foot" id="gateLogFoot"></div>
+  </section>
+
+  <dialog class="modal" id="editDlg">
+    <form method="dialog" id="editForm">
+      <h3>แก้ไขป้ายทะเบียน</h3>
+      <div class="meta" id="editMeta"></div>
+      <label>ป้ายทะเบียน<input id="editPlate" required autocomplete="off" maxlength="20"></label>
+      <label>ชื่อเจ้าของ<input id="editOwner" autocomplete="off" maxlength="80" placeholder="ไม่บังคับ"></label>
+      <label>จังหวัด<select id="editProv"></select></label>
+      <div class="m-msg" id="editMsg"></div>
+      <div class="m-actions">
+        <button type="button" id="editCancel">ยกเลิก</button>
+        <button type="submit" class="btn primary" id="editSave">บันทึก</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal wide" id="regDlg">
+    <div class="reg-wrap">
+      <div class="reg-head">
+        <h3>ป้ายทะเบียนที่ลงทะเบียน</h3>
+        <button type="button" class="t-x" id="regClose" aria-label="ปิด">×</button>
+      </div>
+      <div class="reg-src" id="regSrc"></div>
+      <form id="regForm" class="reg-form" autocomplete="off">
+        <label>ป้ายทะเบียน *<input id="regPlate" placeholder="เช่น 5กข2662" required maxlength="20"></label>
+        <label>จังหวัด<select id="regProv"></select></label>
+        <label>ประเภท *<select id="regCat"></select></label>
+        <label>ชื่อ-นามสกุล<input id="regName" placeholder="ไม่บังคับ" maxlength="80"></label>
+        <label class="full">หมายเหตุ<input id="regNote" placeholder="ไม่บังคับ เช่น รถคันที่ 2, สีขาว" maxlength="120"></label>
+        <div class="full reg-btns">
+          <button type="button" id="regReset" hidden>ยกเลิกการแก้ไข</button>
+          <button type="submit" class="btn primary" id="regSubmit">＋ เพิ่มป้าย</button>
+        </div>
+      </form>
+      <div class="m-msg" id="regMsg"></div>
+      <div class="reg-tools">
+        <input id="regSearch" placeholder="ค้นหาป้าย / ชื่อ">
+        <div class="reg-counts" id="regCounts"></div>
+      </div>
+      <div class="reg-list" id="regList"></div>
+    </div>
+  </dialog>
+
+  <section class="card">
+    <h2>สรุปตามป้ายทะเบียน</h2>
+    <div class="table-wrap">
+      <table class="resp">
+        <thead><tr><th>ป้ายทะเบียน</th><th>เจ้าของ</th><th>จังหวัด</th><th>จำนวนครั้ง</th><th>เวลารวม</th><th>เข้าครั้งแรก</th><th>เข้าล่าสุด</th></tr></thead>
+        <tbody id="summary"></tbody>
+      </table>
+    </div>
+  </section>
+  </div><!-- /dashView -->
+</div>
+
+<script>
+const STORE_KEY = 'plate-dashboard-data';
+const SAMPLE = [
+ ["กล7153","น่าน","ออกแล้ว","14/11/2026","10:04:36","14/11/2026","10:06:17","0:01:41","646808bd-749d","b506109f-111d","1794625476000"],
+ ["กล7153","น่าน","ออกแล้ว","14/11/2026","10:13:06","14/11/2026","10:14:01","0:00:55","532ce9f9-d070","13827bf0-5bec","1794625986000"],
+ ["กล7153","น่าน","ออกแล้ว","14/11/2026","10:15:10","14/11/2026","10:16:15","0:01:05","8995a07e-699e","76751c91-c37b","1794626110000"],
+ ["กล7153","น่าน","ออกแล้ว","14/11/2026","10:22:15","14/11/2026","10:23:04","0:00:49","92a67568-d680","f396140c-31dc","1794626535000"],
+ ["กล7153","น่าน","ออกแล้ว","14/11/2026","10:29:16","14/11/2026","10:30:19","0:01:03","cece562b-6a42","60ab45c3-f304","1794626956000"],
+ ["กล7153","น่าน","ออกแล้ว","14/11/2026","13:06:24","14/11/2026","13:08:31","0:02:07","d74a5999-380f","9e2c6e80-535f","1794636384000"],
+ ["กล7153","น่าน","ออกแล้ว","14/11/2026","15:59:29","14/11/2026","16:01:35","0:02:06","20cc8489-4b52","50767baa-4e43","1794646769000"],
+ ["บท1578","น่าน","ออกแล้ว","17/11/2026","17:19:53","17/11/2026","17:21:21","0:01:28","5aebd37a-e5e5","d14723db-565c","1794910793000"],
+ ["บท1578","น่าน","ออกแล้ว","17/11/2026","17:28:13","17/11/2026","17:29:12","0:00:59","b085f54b-39f2","0db257b2-20dd","1794911293000"]
+];
+const COLS = ["Plate_Number","Province","Status","Entry_Date","Entry_Time","Exit_Date","Exit_Time","Duration","Entry_Event_ID","Exit_Event_ID","Entry_Epoch"];
+
+let data = [];
+let sort = {k:'entryTs', dir:-1};
+const $ = id => document.getElementById(id);
+
+// ---------- ระบบล็อกอินแอดมิน ----------
+// ถ้าตั้งค่า Apps Script แล้ว ระบบจะตรวจชื่อผู้ใช้/รหัสผ่านกับ Apps Script (ADMIN_USER / ADMIN_PASSWORD ในไฟล์ .gs)
+// ถ้ายังไม่ตั้งค่า จะตรวจกับค่าด้านล่างนี้แทน (รหัสผ่านเริ่มต้น: admin1234 — เก็บเป็นค่า SHA-256)
+const ADMIN_USER='admin';
+const ADMIN_PASS_SHA256='ac9689e2272427085e35b9d3e3e8bed88cb3434828b43b86fc0596cad4c6e270';
+const ADMIN_KEY='plate-dashboard-admin';
+let adminMem=null; // สำรองกรณีเบราว์เซอร์ไม่ให้ใช้ sessionStorage
+function adminSession(){ try{ const s=sessionStorage.getItem(ADMIN_KEY); if(s) return JSON.parse(s); }catch(e){} return adminMem; }
+function isAdmin(){ return !!adminSession(); }
+function setAdminSession(v){ adminMem=v; try{ v ? sessionStorage.setItem(ADMIN_KEY,JSON.stringify(v)) : sessionStorage.removeItem(ADMIN_KEY); }catch(e){} }
+async function sha256(text){
+  const bytes=new TextEncoder().encode(text);
+  if(window.crypto && crypto.subtle){ try{ const h=await crypto.subtle.digest('SHA-256',bytes); return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join(''); }catch(e){} }
+  // สำรอง: SHA-256 แบบ JavaScript ล้วน
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const l=bytes.length, n=((l+9+63)>>6)<<6, m=new Uint8Array(n); m.set(bytes); m[l]=0x80;
+  const dv=new DataView(m.buffer); dv.setUint32(n-4,l*8); dv.setUint32(n-8,Math.floor(l/0x20000000));
+  const r=(x,k)=>(x>>>k)|(x<<(32-k)), W=new Uint32Array(64);
+  for(let o=0;o<n;o+=64){
+    for(let i=0;i<16;i++) W[i]=dv.getUint32(o+i*4);
+    for(let i=16;i<64;i++){ const s0=r(W[i-15],7)^r(W[i-15],18)^(W[i-15]>>>3), s1=r(W[i-2],17)^r(W[i-2],19)^(W[i-2]>>>10); W[i]=(W[i-16]+s0+W[i-7]+s1)|0; }
+    let [a,b,c,d,e,f,g,h]=H;
+    for(let i=0;i<64;i++){ const t1=(h+(r(e,6)^r(e,11)^r(e,25))+((e&f)^(~e&g))+K[i]+W[i])|0, t2=((r(a,2)^r(a,13)^r(a,22))+((a&b)^(a&c)^(b&c)))|0; h=g; g=f; f=e; e=(d+t1)|0; d=c; c=b; b=a; a=(t1+t2)|0; }
+    H=H.map((v,i)=>(v+[a,b,c,d,e,f,g,h][i])|0);
+  }
+  return H.map(v=>(v>>>0).toString(16).padStart(8,'0')).join('');
+}
+let loginFails=0;
+async function doLogin(user,pass){
+  let url=''; try{ const c=JSON.parse(localStorage.getItem('plate-dashboard-script')); url=(c&&c.url)||''; }catch(e){}
+  if(!url && typeof DEFAULT_SCRIPT_URL!=='undefined') url=DEFAULT_SCRIPT_URL;
+  if(url){
+    try{
+      const out=await (await fetch(url,{method:'POST',body:JSON.stringify({action:'login',user,key:pass})})).json();
+      if(out.ok) return {ok:true};
+      if(out.auth===false) return {ok:false,msg:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'};
+      if(String(out.error||'').includes('unknown action')) return {ok:false,msg:'Apps Script เป็นเวอร์ชันเก่า — วางโค้ดใหม่แล้ว Deploy เป็นเวอร์ชันใหม่'};
+    }catch(e){ /* เชื่อมต่อ Apps Script ไม่ได้ → ตรวจกับค่าในไฟล์แทน */ }
+  }
+  return (user===ADMIN_USER && await sha256(pass)===ADMIN_PASS_SHA256) ? {ok:true} : {ok:false,msg:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'};
+}
+// ---------- บัญชียาม (หน้าไม้กั้น) / บุคลากร (Dashboard) — เก็บ token ไว้ในแท็บนี้เท่านั้น ----------
+const SESS_KEY='plate-dashboard-sessions';
+let sessMem={};
+function allSess(){ try{ const s=sessionStorage.getItem(SESS_KEY); if(s) return JSON.parse(s); }catch(e){} return sessMem; }
+function getSess(role){ return allSess()[role]||null; }
+function setSess(role,v){ const a={...allSess()}; if(v) a[role]=v; else delete a[role]; sessMem=a; try{ sessionStorage.setItem(SESS_KEY,JSON.stringify(a)); }catch(e){} }
+const viewerSess=()=>getSess('viewer'), gateSess=()=>getSess('gate');
+
+// ---------- เมนู 3 แท็บ ----------
+let currentView='';
+const VIEWS={
+  gate:{ic:'🚧',title:'หน้าเปิด–ปิดไม้กั้น',sub:'สำหรับเจ้าหน้าที่ — ใส่รหัสผ่านหน้าไม้กั้นที่ได้รับจากแอดมิน',user:false,role:'gate'},
+  dashboard:{ic:'📊',title:'Dashboard',sub:'สำหรับบุคลากร — เข้าสู่ระบบด้วยบัญชีที่แอดมินสร้างให้',user:true,role:'viewer'},
+  admin:{ic:'⚙️',title:'หน้าแอดมิน',sub:'สำหรับผู้ดูแลระบบ',user:true,role:'admin'},
+};
+function viewAuthed(v){ if(isAdmin()) return true; return v==='gate' ? !!gateSess() : v==='dashboard' ? !!viewerSess() : false; }
+function canViewDash(){ return (currentView==='dashboard'||currentView==='admin') && viewAuthed(currentView); }
+function showLogin(v,msgCls,msg){
+  const c=VIEWS[v];
+  $('loginIc').textContent=c.ic; $('loginTitle').textContent=c.title; $('loginSub').textContent=c.sub;
+  $('vlUserRow').hidden=!c.user; $('vlUser').required=c.user;
+  $('vlMsg').className='m-msg '+(msgCls||''); $('vlMsg').textContent=msg||'';
+  $('vlSubmit').disabled=false;
+  setTimeout(()=>{ (c.user?$('vlUser'):$('vlPass')).focus(); },50);
+}
+// เปลี่ยนแท็บ (อัปเดต #hash เพื่อบันทึกบุ๊กมาร์ก เช่น index.html#gate สำหรับเครื่องของยาม)
+function goView(v){
+  try{ if(location.hash!=='#'+v) history.replaceState(null,'','#'+v); }catch(e){}
+  route(v);
+}
+function route(want){
+  let v = want || currentView || location.hash.slice(1);
+  if(!VIEWS[v]) v = isAdmin() ? 'admin' : viewerSess() ? 'dashboard' : gateSess() ? 'gate' : 'dashboard';
+  currentView=v;
+  document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('active',a.dataset.view===v));
+  const ok=viewAuthed(v);
+  $('loginView').hidden=ok;
+  $('gateView').hidden=!(ok && v==='gate');
+  $('dashView').hidden=!(ok && v!=='gate');
+  document.body.classList.toggle('has-dash', ok && v!=='gate');
+  document.body.classList.toggle('admin', ok && v==='admin' && isAdmin());
+  const a=adminSession(), vs=viewerSess();
+  $('adminName').textContent=a?a.user:'';
+  $('viewerBar').hidden=!(ok && v==='dashboard');
+  $('viewerName').textContent = vs ? (vs.name||vs.user) : (a ? a.user+' (แอดมิน)' : '');
+  if(!ok) showLogin(v);
+  if(ok && v!=='gate' && live.url){ live.lastText=null; pollSheet(); }
+  startGatePolling();
+  startGuardPolling(ok && v==='gate');
+  if(ok && v==='admin'){ loadUsers(); updateOvrSync(); const b=document.querySelector('#adminTabs button.active'); showAdminTab(b?b.dataset.atab:'gate'); }
+}
+window.addEventListener('hashchange',()=>route(location.hash.slice(1)));
+document.querySelectorAll('#tabs a').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); goView(a.dataset.view); }));
+function applyAdminUI(){ route(); }
+function openLogin(){ goView('admin'); }
+function clearData(){ data=[]; live.lastText=null; gateLogSig=''; buildFilters(); render(); }
+// รหัสผ่านแอดมินไม่ตรงกับ Apps Script (เช่น เพิ่งเปลี่ยนรหัสในสคริปต์) → ออกจากระบบแล้วให้ล็อกอินใหม่
+function authExpired(){
+  logout();
+  showLogin('admin','info','กรุณาเข้าสู่ระบบใหม่ด้วยชื่อผู้ใช้/รหัสผ่านแอดมินที่ตั้งไว้ใน Apps Script');
+}
+function logout(){
+  setAdminSession(null);
+  ['editDlg','regDlg'].forEach(id=>{ if($(id).open) $(id).close(); });
+  clearData(); route(); window.scrollTo({top:0,behavior:'smooth'});
+}
+// เรียก Apps Script ด้วย token ของยาม/บุคลากร — token หมดอายุหรือถูกยกเลิก → กลับไปหน้าเข้าสู่ระบบ
+async function apiCall(payload, role){
+  const url=scriptCfg().url, s=getSess(role);
+  if(!url || !s) throw new Error('ยังไม่ได้เข้าสู่ระบบ');
+  const out=await (await fetch(url,{method:'POST',body:JSON.stringify({...payload,token:s.token})})).json();
+  if(out.auth===false){
+    setSess(role,null); if(role==='viewer') clearData(); route();
+    showLogin(currentView,'info','หมดเวลาเข้าสู่ระบบ หรือรหัสผ่านถูกเปลี่ยน — กรุณาเข้าสู่ระบบใหม่');
+    throw new Error('auth');
+  }
+  if(!out.ok) throw new Error(out.error||'เกิดข้อผิดพลาด');
+  return out;
+}
+
+// ---------- parsing ----------
+function pad(n){return String(n).padStart(2,'0')}
+function parseDate(d){ // dd/mm/yyyy (รองรับปี พ.ศ.) หรือ yyyy-mm-dd หรือ Excel serial
+  if(d==null||d==='') return null;
+  if(typeof d==='number'){ const t=new Date(Math.round((d-25569)*864e5)); return {y:t.getUTCFullYear(),m:t.getUTCMonth()+1,d:t.getUTCDate()}; }
+  d=String(d).trim(); let m;
+  if((m=d.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/))){ let y=+m[3]; if(y>2400) y-=543; return {y,m:+m[2],d:+m[1]}; }
+  if((m=d.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return {y:+m[1],m:+m[2],d:+m[3]};
+  return null;
+}
+function parseTime(t){
+  if(t==null||t==='') return null;
+  if(typeof t==='number'){ const s=Math.round((t%1)*86400); return {h:Math.floor(s/3600),mi:Math.floor(s%3600/60),s:s%60}; }
+  const m=String(t).trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/); if(!m) return null;
+  return {h:+m[1],mi:+m[2],s:+(m[3]||0)};
+}
+function ts(d,t){ const D=parseDate(d), T=parseTime(t)||{h:0,mi:0,s:0}; if(!D) return null; return new Date(D.y,D.m-1,D.d,T.h,T.mi,T.s).getTime(); }
+function durToSec(v){
+  if(v==null||v==='') return null;
+  if(typeof v==='number') return Math.round(v*86400);
+  const p=String(v).trim().split(':').map(Number); if(p.some(isNaN)) return null;
+  return p.length===3?p[0]*3600+p[1]*60+p[2]:p.length===2?p[0]*60+p[1]:p[0];
+}
+function fmtDur(s){ if(s==null) return '–'; const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60; return `${h}:${pad(m)}:${pad(x)}`; }
+function fmtDate(t){ if(t==null) return '–'; const d=new Date(t); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`; }
+function fmtTime(t){ if(t==null) return '–'; const d=new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function isoDay(t){ const d=new Date(t); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+function normalize(obj){
+  const g=k=>{ for(const key in obj){ if(key.trim().toLowerCase()===k.toLowerCase()) return obj[key]; } return ''; };
+  // ใช้ Entry_Epoch เป็นหลัก (แม่นยำ ไม่ขึ้นกับรูปแบบวันที่ของชีต) ถ้าไม่มีค่อยอ่านจากวันที่+เวลา
+  const epoch = Number(String(g('Entry_Epoch')).replace(/[, ]/g,''));
+  let entryTs = epoch>1e11 ? epoch : (epoch>1e9 ? epoch*1000 : ts(g('Entry_Date'), g('Entry_Time')));
+  let exitTs = ts(g('Exit_Date'), g('Exit_Time'));
+  let durSec = durToSec(g('Duration'));
+  if(exitTs!=null && durSec!=null && entryTs!=null) exitTs = entryTs + durSec*1000; // ให้สอดคล้องกับเวลาเข้า
+  if(durSec==null && entryTs!=null && exitTs!=null) durSec=Math.round((exitTs-entryTs)/1000);
+  const plate = String(g('Plate_Number')).trim();
+  if(!plate) return null;
+  return {
+    plate, province:String(g('Province')).trim(), owner:String(g('Owner_Name')||'').trim(), position:(p=>/^(จอดอยู่|ออกแล้ว|ออก \(ไม่พบเวลาเข้า\)|บุคคลภายนอก)$/.test(p)?'':p)(String(g('Position')||'').trim()), status:String(g('Status')).trim() || (exitTs?'ออกแล้ว':'อยู่ภายใน'),
+    entryTs, exitTs, durSec,
+    entryId:String(g('Entry_Event_ID')), exitId:String(g('Exit_Event_ID')), epoch:g('Entry_Epoch')
+  };
+}
+function rowsFromArrays(arr){ return arr.map(r=>{const o={}; COLS.forEach((c,i)=>o[c]=r[i]); return normalize(o);}).filter(Boolean); }
+
+function parseCSV(text){
+  const rows=[]; let row=[], f='', q=false;
+  text=text.replace(/^﻿/,'');
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(f); f=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=''; }
+    else f+=c;
+  }
+  if(f!==''||row.length){ row.push(f); rows.push(row); }
+  const head=rows.shift()||[];
+  return rows.filter(r=>r.some(v=>v!=='')).map(r=>{const o={}; head.forEach((h,i)=>o[h]=r[i]); return o;});
+}
+
+function merge(newRows){
+  const key=r=>r.entryId&&r.entryId!=='undefined'?r.entryId:`${r.plate}|${r.entryTs}`;
+  const map=new Map(data.map(r=>[key(r),r]));
+  newRows.forEach(r=>map.set(key(r),r));
+  data=[...map.values()].filter(withinRetention);
+  save(); buildFilters(); render(); checkUnknown();
+}
+
+async function loadFile(file){
+  if(!isAdmin()) return;
+  if(live.url){ alert('ตอนนี้เชื่อมต่อ Google Sheet อยู่ — กด “ตัดการเชื่อมต่อ” ก่อนนำเข้าไฟล์'); return; }
+  try{
+    let objs;
+    if(/\.csv$/i.test(file.name)) objs=parseCSV(await file.text());
+    else{
+      if(typeof XLSX==='undefined'){ alert('ไม่สามารถโหลดตัวอ่าน Excel ได้ (ต้องต่ออินเทอร์เน็ต) — กรุณาใช้ไฟล์ CSV'); return; }
+      const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+      objs=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:true,defval:''});
+    }
+    const rows=objs.map(normalize).filter(Boolean);
+    if(!rows.length){ alert('ไม่พบข้อมูลในไฟล์ — ตรวจสอบหัวคอลัมน์ให้ตรง'); return; }
+    merge(rows);
+  }catch(e){ alert('อ่านไฟล์ไม่สำเร็จ: '+e.message); }
+}
+
+// ---------- storage ----------
+// เก็บข้อมูลในเครื่องเฉพาะโหมดนำเข้าไฟล์ — ข้อมูลจาก Google Sheet ไม่เก็บไว้ในเครื่อง (ต้องเข้าสู่ระบบก่อนดู)
+function save(){ if(typeof live!=='undefined' && live.url) return; try{ localStorage.setItem(STORE_KEY, JSON.stringify(data)); }catch(e){} }
+function load(){ try{ const s=localStorage.getItem(STORE_KEY); if(s) return JSON.parse(s); }catch(e){} return null; }
+
+// ---------- filters ----------
+function buildFilters(){
+  const fill=(sel,vals)=>{ const cur=sel.value; sel.innerHTML='<option value="">ทั้งหมด</option>'+[...new Set(vals)].filter(Boolean).sort().map(v=>`<option>${esc(v)}</option>`).join(''); sel.value=cur; };
+  const pv=$('fProv'), curPv=pv.value;
+  fill(pv, data.map(r=>r.province).filter(p=>!unk(p)));
+  if(data.some(r=>unk(r.province))) pv.insertAdjacentHTML('beforeend',`<option value="${UNKNOWN}">⚠ ไม่ทราบจังหวัด</option>`);
+  pv.value=curPv; if(pv.value!==curPv) pv.value='';
+  fill($('fStatus'), data.map(r=>r.status));
+}
+function filtered(){
+  const ty=$('fType').value;
+  const p=$('fPlate').value.trim().replace(/\s/g,''), pv=$('fProv').value, st=$('fStatus').value, fr=$('fFrom').value, to=$('fTo').value;
+  return data.filter(r=>{
+    if(p && !r.plate.replace(/\s/g,'').includes(p) && !ownerOf(r).replace(/\s/g,'').toLowerCase().includes(p.toLowerCase())) return false;
+    if(ty){ const c=catOf(r); if(ty===OUTSIDE ? c : c!==ty) return false; }
+    if(pv===UNKNOWN){ if(!unk(r.province)) return false; }
+    else if(pv && r.province!==pv) return false;
+    if(st && r.status!==st) return false;
+    if(r.entryTs!=null){ const d=isoDay(r.entryTs); if(fr && d<fr) return false; if(to && d>to) return false; }
+    return true;
+  });
+}
+// ---------- เก็บข้อมูล 3 เดือนล่าสุด ----------
+// เดือนปัจจุบัน + 2 เดือนก่อนหน้า (ต้องตรงกับ RETENTION_MONTHS ใน google-apps-script.gs)
+const RETENTION_MONTHS=3;
+const TH_MONTHS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function retentionMinKey(){ const n=new Date(); return n.getFullYear()*12+n.getMonth()-(RETENTION_MONTHS-1); }
+function withinRetention(r){
+  if(!r.exitTs && r.entryTs!=null) return true;           // รถที่ยังจอดอยู่ ไม่ซ่อน
+  const t=r.entryTs!=null ? r.entryTs : r.exitTs;
+  if(t==null) return true;
+  const d=new Date(t); return d.getFullYear()*12+d.getMonth() >= retentionMinKey();
+}
+function retentionLabel(){
+  const k=retentionMinKey(), y=Math.floor(k/12), m=k%12, n=new Date();
+  return {from:`1 ${TH_MONTHS[m]} ${y}`, months:Array.from({length:RETENTION_MONTHS},(_,i)=>TH_MONTHS[(k+i)%12]).join(' · '), next:TH_MONTHS[m]};
+}
+function updateRetentionText(){
+  const L=retentionLabel();
+  $('retentionText').innerHTML=`เก็บข้อมูล <b>${RETENTION_MONTHS} เดือนล่าสุด</b> (${L.months}) — ตั้งแต่ ${L.from} · เมื่อขึ้นเดือนใหม่ ข้อมูลเดือน ${L.next} จะถูกลบออกจาก Google Sheet อัตโนมัติ (ทุกวันเวลาประมาณ 03:00)`;
+}
+
+// ---------- ไม่ทราบจังหวัด ----------
+const UNKNOWN='__unknown';
+function unk(p){ p=String(p||'').trim(); return !p || /ไม่ทราบ|ไม่ระบุ|unknown|^[-–?]+$/i.test(p); }
+const WARN_IC='<span class="warn-ic" aria-hidden="true">!</span>';
+// ตำแหน่ง/ประเภท: จากป้ายที่ลงทะเบียนก่อน ถ้าไม่มีใช้คอลัมน์ Position ในชีต
+function catOf(r){ const g=regFind(r); return (g && g.category) || r.position || ''; }
+const OUTSIDE_BADGE='<span class="cat-badge out" title="ป้ายนี้ไม่ได้ลงทะเบียน"><i class="c-out"></i>บุคคลภายนอก</span>';
+function catBadge(r){ const g=regFind(r); return g ? regBadge(g) : (r.position ? regBadge({category:r.position,name:r.owner||''}) : OUTSIDE_BADGE); }
+function plateCell(r){ return esc(r.plate)+(unk(r.province)?WARN_IC:'')+catBadge(r)+(r.edited?'<span class="tag-edit" title="แก้ไขไว้เฉพาะในเครื่องนี้">แก้ในเครื่อง</span>':''); }
+// ชื่อเจ้าของ: ใช้จากชีต (Owner_Name) ก่อน ถ้าว่างใช้ชื่อจากป้ายที่ลงทะเบียน
+function ownerOf(r){ return (r.owner||'').trim() || ((regFind(r)||{}).name||'').trim(); }
+function ownerCell(r){ const n=ownerOf(r); return n ? esc(n) : '<span style="color:var(--muted)">–</span>'; }
+function rowKey(r){ return r.entryId && r.entryId!=='undefined' ? r.entryId : `${r.plate}|${r.entryTs}`; }
+const ICON_EDIT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+function provCell(p){ return unk(p) ? `<span class="prov-warn"><span class="warn-ic" aria-hidden="true">!</span>${p?esc(p):'ไม่ทราบจังหวัด'}</span>` : esc(p); }
+
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ---------- render ----------
+function render(){
+  const rows=filtered();
+  const inside = r => !r.exitTs || /อยู่|ยังไม่ออก|in/i.test(r.status) && !/ออกแล้ว/.test(r.status);
+  $('kTotal').textContent=rows.length.toLocaleString('th-TH');
+  $('kPlates').textContent=new Set(rows.map(r=>r.plate)).size.toLocaleString('th-TH');
+  $('kInside').textContent=rows.filter(inside).length.toLocaleString('th-TH');
+  const durs=rows.map(r=>r.durSec).filter(v=>v!=null);
+  const staffN=rows.filter(r=>catOf(r)).length;
+  $('kStaff').textContent=`${staffN.toLocaleString('th-TH')} / ${(rows.length-staffN).toLocaleString('th-TH')}`;
+  $('kAvg').textContent=durs.length?fmtDur(Math.round(durs.reduce((a,b)=>a+b,0)/durs.length)):'–';
+
+  const ts=rows.map(r=>r.entryTs).filter(v=>v!=null);
+  $('subtitle').textContent = ts.length ? `ข้อมูลรถเข้า–ออก · ${fmtDate(Math.min(...ts))} – ${fmtDate(Math.max(...ts))}` : 'ข้อมูลรถเข้า–ออก';
+
+  renderTrend(rows); renderTopPlates(rows); renderDonut(rows);
+
+  // per hour
+  const hrs=new Array(24).fill(0); rows.forEach(r=>{ if(r.entryTs!=null) hrs[new Date(r.entryTs).getHours()]++; });
+  const hm=Math.max(1,...hrs);
+  $('hourBars').innerHTML=hrs.map((v,h)=>`<div title="${pad(h)}:00 — ${v} ครั้ง" style="height:${v/hm*100}%;${v?'':'opacity:.15'}"></div>`).join('');
+  $('hourAxis').innerHTML=hrs.map((_,h)=>`<span>${h%3===0?h:''}</span>`).join('');
+
+  // table
+  const sv=(r,k)=>k==='owner'?(ownerOf(r)||null):r[k];
+  const s=[...rows].sort((a,b)=>{ const x=sv(a,sort.k),y=sv(b,sort.k); if(x==null) return 1; if(y==null) return -1; return (x>y?1:x<y?-1:0)*sort.dir; });
+  $('rows').innerHTML = s.length ? s.map(r=>`<tr${unk(r.province)?' class="row-warn" title="ไม่ทราบจังหวัด"':''}>
+    <td class="plate" data-label="ป้ายทะเบียน">${plateCell(r)}</td><td data-label="เจ้าของ">${ownerCell(r)}</td><td data-label="จังหวัด">${provCell(r.province)}</td>
+    <td data-label="สถานะ"><span class="pill ${/ไม่พบเวลาเข้า/.test(r.status)?'noentry':inside(r)?'in':'out'}" ${/ไม่พบเวลาเข้า/.test(r.status)?'title="กล้องเห็นตอนรถออก แต่ไม่พบบันทึกตอนเข้า"':''}>${esc(r.status)}</span></td>
+    <td class="num" data-label="วันที่เข้า">${fmtDate(r.entryTs)}</td><td class="num" data-label="เวลาเข้า">${fmtTime(r.entryTs)}</td>
+    <td class="num" data-label="วันที่ออก">${fmtDate(r.exitTs)}</td><td class="num" data-label="เวลาออก">${fmtTime(r.exitTs)}</td>
+    <td class="num" data-label="ระยะเวลา">${fmtDur(r.durSec)}</td>
+    <td class="act admin-only"><button class="edit-btn" data-key="${esc(rowKey(r))}" title="แก้ไขป้ายทะเบียน">${ICON_EDIT}แก้ไข</button></td></tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่พบข้อมูล — นำเข้าไฟล์หรือกด “โหลดข้อมูลตัวอย่าง”</td></tr>';
+  $('count').textContent=`แสดง ${rows.length} จาก ${data.length} รายการ`;
+
+  // summary
+  const g={}; rows.forEach(r=>{ const o=g[r.plate]||(g[r.plate]={plate:r.plate,province:r.province,owner:'',n:0,sec:0,first:Infinity,last:-Infinity}); o.n++; if(!o.owner) o.owner=ownerOf(r); if(!o.position) o.position=r.position||''; o.sec+=r.durSec||0; if(r.entryTs!=null){o.first=Math.min(o.first,r.entryTs);o.last=Math.max(o.last,r.entryTs);} });
+  const sm=Object.values(g).sort((a,b)=>b.n-a.n);
+  $('summary').innerHTML = sm.length ? sm.map(o=>`<tr${unk(o.province)?' class="row-warn"':''}><td class="plate" data-label="ป้ายทะเบียน">${plateCell(o)}</td><td data-label="เจ้าของ">${ownerCell(o)}</td><td data-label="จังหวัด">${provCell(o.province)}</td><td class="num" data-label="จำนวนครั้ง">${o.n}</td><td class="num" data-label="เวลารวม">${fmtDur(o.sec)}</td>
+    <td class="num" data-label="เข้าครั้งแรก">${isFinite(o.first)?fmtDate(o.first)+' '+fmtTime(o.first):'–'}</td><td class="num" data-label="เข้าล่าสุด">${isFinite(o.last)?fmtDate(o.last)+' '+fmtTime(o.last):'–'}</td></tr>`).join('') : '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
+}
+
+// ---------- charts ----------
+function tipEl(host){ let t=host.querySelector('.tip'); if(!t){ t=document.createElement('div'); t.className='tip'; host.appendChild(t);} return t; }
+function showTip(host,html,x,y){ const t=tipEl(host); t.innerHTML=html; t.style.display='block';
+  const w=t.offsetWidth, hw=host.clientWidth; t.style.left=Math.max(0,Math.min(hw-w,x-w/2))+'px'; t.style.top=(y-t.offsetHeight-10)+'px'; }
+function hideTip(host){ const t=host.querySelector('.tip'); if(t) t.style.display='none'; }
+
+function renderTrend(rows){
+  const host=$('trend');
+  const byDay={};
+  rows.forEach(r=>{ if(r.entryTs==null) return; const k=isoDay(r.entryTs); (byDay[k]||(byDay[k]={n:0,p:new Set()})).n++; byDay[k].p.add(r.plate); });
+  const days=Object.keys(byDay).sort().slice(-30);
+  if(!days.length){ host.innerHTML='<div class="empty">ยังไม่มีข้อมูล</div>'; return; }
+  const A=days.map(d=>byDay[d].n), B=days.map(d=>byDay[d].p.size);
+  const W=Math.max(260,host.clientWidth), H=210, L=28, R=12, T=12, Bm=26;
+  const max=Math.max(1,...A); const step=Math.max(1,Math.ceil(max/4)); const top=step*4;
+  const x=i=>days.length===1?(L+W-R)/2:L+i*(W-L-R)/(days.length-1);
+  const y=v=>T+(H-T-Bm)*(1-v/top);
+  let g='';
+  for(let i=0;i<=4;i++){ const v=i*step, yy=y(v); g+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/><text x="${L-6}" y="${yy+4}" text-anchor="end">${v}</text>`; }
+  const every=Math.ceil(days.length/8);
+  days.forEach((d,i)=>{ if(i%every===0||i===days.length-1){ const [,m,dd]=d.split('-'); g+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${dd}/${m}</text>`; }});
+  const path=arr=>arr.map((v,i)=>`${i?'L':'M'}${x(i)},${y(v)}`).join('');
+  const area=`${path(A)}L${x(A.length-1)},${y(0)}L${x(0)},${y(0)}Z`;
+  const dots=(arr,c)=>arr.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="4.5" fill="${c}" stroke="var(--surface)" stroke-width="2"/>`).join('');
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" height="${H}">
+    <defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--s1)" stop-opacity=".28"/><stop offset="1" stop-color="var(--s1)" stop-opacity="0"/></linearGradient></defs>
+    ${g}<path d="${area}" fill="url(#ga)"/>
+    <path d="${path(B)}" fill="none" stroke="var(--s2)" stroke-width="2" stroke-linejoin="round"/>
+    <path d="${path(A)}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round"/>
+    <line id="xh" y1="${T}" y2="${H-Bm}" stroke="var(--muted)" stroke-dasharray="3 3" visibility="hidden"/>
+    ${dots(B,'var(--s2)')}${dots(A,'var(--s1)')}
+    <rect x="${L}" y="0" width="${W-L-R}" height="${H}" fill="transparent" id="hit"/></svg>`;
+  const svg=host.querySelector('svg'), xh=svg.querySelector('#xh');
+  const hit=svg.querySelector('#hit');
+  const onMove=e=>{
+    const r=svg.getBoundingClientRect(), px=(e.clientX-r.left)*W/r.width;
+    let i=0, best=Infinity; days.forEach((_,k)=>{ const dd=Math.abs(x(k)-px); if(dd<best){best=dd;i=k;} });
+    xh.setAttribute('x1',x(i)); xh.setAttribute('x2',x(i)); xh.setAttribute('visibility','visible');
+    const [yy,m,dd]=days[i].split('-');
+    showTip(host,`<b>${dd}/${m}/${yy}</b><span class="sw" style="background:var(--s1)"></span> เข้า ${A[i]} ครั้ง<br><span class="sw" style="background:var(--s2)"></span> ป้ายไม่ซ้ำ ${B[i]} ป้าย`, x(i)*r.width/W, y(A[i])*r.height/H);
+  };
+  hit.addEventListener('pointermove',onMove);
+  hit.addEventListener('pointerdown',onMove);
+  hit.addEventListener('pointerleave',e=>{ if(e.pointerType==='mouse'){ xh.setAttribute('visibility','hidden'); hideTip(host); } });
+  host._hide=()=>{ xh.setAttribute('visibility','hidden'); hideTip(host); };
+}
+
+function renderTopPlates(rows){
+  const c={}; rows.forEach(r=>{ c[r.plate]=(c[r.plate]||0)+1; });
+  const list=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max=Math.max(1,...list.map(x=>x[1]));
+  $('topPlates').innerHTML = list.length ? list.map(([p,n])=>`<div class="cat-row" title="${esc(p)}: ${n} ครั้ง"><div class="top"><span>${esc(p)}${rows.some(r=>r.plate===p&&unk(r.province))?WARN_IC:''}</span><span class="num">${n} ครั้ง</span></div><div class="cat-track"><div class="cat-fill" style="width:${n/max*100}%"></div></div></div>`).join('') : '<div class="empty">ยังไม่มีข้อมูล</div>';
+}
+
+const PERIODS=[
+  {name:'เช้า (06–12)', test:h=>h>=6&&h<12, c:'var(--s1)'},
+  {name:'บ่าย (12–16)', test:h=>h>=12&&h<16, c:'var(--s2)'},
+  {name:'เย็น (16–19)', test:h=>h>=16&&h<19, c:'var(--s3)'},
+  {name:'กลางคืน (19–06)', test:h=>h>=19||h<6, c:'var(--s4)'}
+];
+function renderDonut(rows){
+  const host=$('donut');
+  const counts=PERIODS.map(()=>0);
+  rows.forEach(r=>{ if(r.entryTs==null) return; const h=new Date(r.entryTs).getHours(); const i=PERIODS.findIndex(p=>p.test(h)); counts[i]++; });
+  const total=counts.reduce((a,b)=>a+b,0);
+  if(!total){ host.innerHTML='<div class="empty">ยังไม่มีข้อมูล</div>'; return; }
+  const R=70, r=46, cx=85, cy=85; let a0=-Math.PI/2; let segs='';
+  const nonzero=counts.filter(v=>v).length;
+  counts.forEach((v,i)=>{
+    if(!v) return;
+    const frac=v/total;
+    if(frac>=0.9999){ segs+=`<circle cx="${cx}" cy="${cy}" r="${(R+r)/2}" fill="none" stroke="${PERIODS[i].c}" stroke-width="${R-r}" data-i="${i}"/>`; return; }
+    const a1=a0+frac*2*Math.PI, big=frac>.5?1:0;
+    const p=(rad,a)=>`${cx+rad*Math.cos(a)},${cy+rad*Math.sin(a)}`;
+    segs+=`<path d="M${p(R,a0)}A${R},${R} 0 ${big} 1 ${p(R,a1)}L${p(r,a1)}A${r},${r} 0 ${big} 0 ${p(r,a0)}Z" fill="${PERIODS[i].c}" stroke="var(--surface)" stroke-width="${nonzero>1?2:0}" data-i="${i}"/>`;
+    a0=a1;
+  });
+  host.innerHTML=`<svg viewBox="0 0 170 170">${segs}
+    <text x="85" y="80" text-anchor="middle" style="font-size:12px">ทั้งหมด</text>
+    <text x="85" y="100" text-anchor="middle" style="font-size:18px;font-weight:700;fill:var(--text)">${total.toLocaleString('th-TH')}</text></svg>
+    <div class="donut-legend">${PERIODS.map((p,i)=>`<div><i class="sw" style="background:${p.c}"></i><span>${p.name}</span><span class="pct">${(counts[i]/total*100).toFixed(1)}%</span></div>`).join('')}</div>`;
+  host.querySelectorAll('[data-i]').forEach(el=>{
+    el.style.cursor='pointer';
+    const show=e=>{ const i=+el.dataset.i, hr=host.getBoundingClientRect();
+      showTip(host,`<b>${PERIODS[i].name}</b>${counts[i]} ครั้ง · ${(counts[i]/total*100).toFixed(1)}%`, e.clientX-hr.left, e.clientY-hr.top); };
+    el.addEventListener('pointermove',show);
+    el.addEventListener('pointerdown',show);
+    el.addEventListener('pointerleave',e=>{ if(e.pointerType==='mouse') hideTip(host); });
+  });
+  host._hide=()=>hideTip(host);
+}
+// แตะนอกกราฟเพื่อปิด tooltip (สำหรับจอสัมผัส)
+document.addEventListener('pointerdown',e=>{ ['trend','donut'].forEach(id=>{ const h=$(id); if(h._hide && !h.contains(e.target)) h._hide(); }); });
+let rzW=window.innerWidth, rz; window.addEventListener('resize',()=>{ if(window.innerWidth===rzW) return; rzW=window.innerWidth; clearTimeout(rz); rz=setTimeout(()=>renderTrend(filtered()),150); });
+window.addEventListener('orientationchange',()=>{ clearTimeout(rz); rz=setTimeout(()=>renderTrend(filtered()),150); });
+
+function exportCSV(){
+  const rows=filtered(); const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const head=['Plate_Number','Province','Owner_Name','Position','Status','Entry_Date','Entry_Time','Exit_Date','Exit_Time','Duration','Entry_Event_ID','Exit_Event_ID','Entry_Epoch'];
+  const lines=[head.join(',')].concat(rows.map(r=>[r.plate,r.province,ownerOf(r),catOf(r),r.status,fmtDate(r.entryTs),fmtTime(r.entryTs),r.exitTs?fmtDate(r.exitTs):'',r.exitTs?fmtTime(r.exitTs):'',fmtDur(r.durSec),r.entryId,r.exitId,r.epoch].map(q).join(',')));
+  const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`plates_${isoDay(Date.now())}.csv`; a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ---------- Google Sheet (Realtime) ----------
+// ใส่ลิงก์ชีตไว้ตรงนี้ เพื่อให้ทุกเครื่อง (รวมถึงมือถือ) เชื่อมต่ออัตโนมัติเมื่อเปิดหน้า
+const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1EGjZvyTuV6WQHRYn5LJHQcp4UN1tM1yfDTQVArPpi6Y/edit?gid=1321508814#gid=1321508814';
+const SHEET_KEY = 'plate-dashboard-sheet-v2';
+let live = {url:'', timer:null, lastText:null, busy:false, lastOk:null};
+
+function sheetCsvUrl(url, sheetName){
+  const m = String(url).match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/) || String(url).match(/^([a-zA-Z0-9-_]{30,})$/);
+  if(!m) return null;
+  const gid = (String(url).match(/[#&?]gid=(\d+)/)||[])[1];
+  const which = sheetName ? '&sheet='+encodeURIComponent(sheetName) : (gid?'&gid='+gid:'');
+  return `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?headers=1${which}`;
+}
+// ใช้ JSONP (โหลดผ่าน <script>) จึงไม่ติด CORS — ใช้ได้ทั้งเปิดไฟล์ตรง ๆ และบนมือถือ
+let jsonpSeq=0;
+function fetchSheetRows(url, sheetName){
+  return new Promise((resolve,reject)=>{
+    const cb='__sheetCb'+(++jsonpSeq), s=document.createElement('script');
+    const done=()=>{ delete window[cb]; s.remove(); clearTimeout(to); };
+    const to=setTimeout(()=>{ done(); reject(new Error('timeout')); },15000);
+    window[cb]=resp=>{
+      done();
+      if(!resp || resp.status==='error') return reject(new Error((resp&&resp.errors&&resp.errors[0]&&resp.errors[0].detailed_message)||'error'));
+      const cols=resp.table.cols.map(c=>(c.label||c.id||'').trim());
+      const objs=resp.table.rows.map(r=>{ const o={}; cols.forEach((c,i)=>{ const cell=r.c[i]; o[c]= cell==null ? '' : (cell.f!=null ? cell.f : (cell.v==null?'':cell.v)); }); return o; });
+      resolve({objs, sig:JSON.stringify(resp.table.rows)});
+    };
+    s.onerror=()=>{ done(); reject(new Error('load')); };
+    s.src=sheetCsvUrl(url, sheetName)+`&tqx=responseHandler:${cb}&_=${Date.now()}`;
+    document.head.appendChild(s);
+  });
+}
+function setStatus(cls, html){ const s=$('connStatus'); s.className='conn-status '+cls; s.innerHTML='<span class="dot"></span>'+html; }
+
+// ดึงข้อมูล Dashboard ผ่าน Apps Script (ต้องเข้าสู่ระบบ) — บุคลากรใช้ token, แอดมินใช้บัญชีแอดมิน
+async function fetchDashData(){
+  const v=viewerSess();
+  if(isAdmin() && (currentView==='admin' || !v)) return callScript({action:'data'});
+  if(v) return apiCall({action:'data'},'viewer');
+  throw new Error('ยังไม่ได้เข้าสู่ระบบ');
+}
+async function pollSheet(){
+  if(live.busy || !live.url || !canViewDash()) return;
+  live.busy=true;
+  try{
+    const out = await fetchDashData();
+    const sig = JSON.stringify(out.rows||[]);
+    if(sig !== live.lastText){
+      const rows = (out.rows||[]).map(normalize).filter(Boolean).map(applyOverride).filter(withinRetention);
+      live.lastText = sig;
+      data = rows; buildFilters(); render(); checkUnknown();
+    }
+    applyRegistryList(out.registry);
+    const gsig=JSON.stringify(out.gateLog);
+    if(gsig!==gateLogSig){ gateLogSig=gsig; renderGateLog(gateLogFrom(out.gateLog)); }
+    live.lastOk = new Date();
+    setStatus('live', `<b>Live</b> · ${data.length} รายการ · อัปเดตล่าสุด ${fmtTime(live.lastOk.getTime())}`);
+  }catch(e){
+    if(e.message==='auth') return;
+    const last = live.lastOk ? ` (ข้อมูลล่าสุดเมื่อ ${fmtTime(live.lastOk.getTime())})` : '';
+    setStatus('err', `ดึงข้อมูลไม่สำเร็จ${last} — ${esc(e.message)} · ตรวจสอบอินเทอร์เน็ต และว่า Apps Script เป็นเวอร์ชันล่าสุด`);
+  }finally{ live.busy=false; }
+}
+function startLive(url){
+  if(!sheetCsvUrl(url)){ setStatus('err','ลิงก์ไม่ถูกต้อง — ต้องเป็นลิงก์ Google Sheet'); return; }
+  stopLive(true);
+  live.url=url; live.lastText=null;
+  try{ localStorage.setItem(SHEET_KEY, JSON.stringify({url, sec:$('interval').value})); }catch(e){}
+  document.body.classList.add('live');
+  $('sheetUrl').value=url; $('connBtn').textContent='ตัดการเชื่อมต่อ';
+  setStatus('loading','กำลังดึงข้อมูลจาก Google Sheet…');
+  pollSheet();
+  live.timer=setInterval(()=>{ if(!document.hidden) pollSheet(); }, (+$('interval').value||10)*1000);
+}
+function stopLive(silent){
+  clearInterval(live.timer); live.timer=null; live.url='';
+  document.body.classList.remove('live'); $('connBtn').textContent='เชื่อมต่อ';
+  if(!silent){
+    try{ localStorage.setItem(SHEET_KEY, JSON.stringify({url:'', sec:$('interval').value, off:true})); }catch(e){}
+    setStatus('', 'ยังไม่ได้เชื่อมต่อ Google Sheet — ใช้ข้อมูลในเครื่อง');
+  }
+}
+$('connBtn').onclick=()=>{ if(!isAdmin()) return; if(live.url) stopLive(); else startLive($('sheetUrl').value.trim()); };
+$('sheetUrl').addEventListener('keydown',e=>{ if(e.key==='Enter') $('connBtn').click(); });
+$('interval').addEventListener('change',()=>{ if(live.url) startLive(live.url); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && live.url) pollSheet(); });
+
+// ---------- แจ้งเตือนขวาล่าง ----------
+const toastBox=document.createElement('div'); toastBox.className='toasts'; toastBox.setAttribute('aria-live','polite'); document.body.appendChild(toastBox);
+function toast(title,msg,onClick,ms=10000){
+  const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','alert');
+  t.innerHTML=`<div class="t-ic">!</div><div><div class="t-title">${title}</div><div class="t-msg">${msg}</div></div><button class="t-x" aria-label="ปิด">×</button>`;
+  const close=()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),250); };
+  t.querySelector('.t-x').onclick=e=>{ e.stopPropagation(); close(); };
+  t.onclick=()=>{ if(onClick) onClick(); close(); };
+  toastBox.appendChild(t);
+  while(toastBox.children.length>4) toastBox.firstChild.remove();
+  if(ms) setTimeout(close,ms);
+}
+function showUnknownRows(plate){
+  $('fProv').value=UNKNOWN; $('fPlate').value=plate||''; render();
+  $('rows').closest('section').scrollIntoView({behavior:'smooth'});
+}
+const seenUnknown=new Set(); let unknownInit=false;
+function checkUnknown(){
+  const key=r=>r.entryId&&r.entryId!=='undefined'?r.entryId:`${r.plate}|${r.entryTs}`;
+  const list=data.filter(r=>unk(r.province));
+  const fresh=list.filter(r=>!seenUnknown.has(key(r)));
+  fresh.forEach(r=>seenUnknown.add(key(r)));
+  if(!fresh.length) return;
+  if(!unknownInit || fresh.length>3){
+    // ครั้งแรก (หรือเข้ามาพร้อมกันหลายรายการ) สรุปเป็นข้อความเดียว
+    const plates=[...new Set(fresh.map(r=>r.plate))];
+    toast(`พบ ${fresh.length} รายการที่ไม่ทราบจังหวัด`, `ป้าย: ${plates.slice(0,5).map(esc).join(', ')}${plates.length>5?' …':''} · แตะเพื่อดูรายการ`, ()=>showUnknownRows(''));
+  }else{
+    fresh.forEach(r=>toast(`ป้าย ${esc(r.plate)} ไม่ทราบจังหวัด`, `เข้า ${fmtDate(r.entryTs)} ${fmtTime(r.entryTs)} · แตะเพื่อดูรายการ`, ()=>showUnknownRows(r.plate)));
+  }
+  unknownInit=true;
+}
+
+// ---------- แก้ไขป้ายทะเบียน ----------
+const PROVINCES=['กรุงเทพมหานคร','กระบี่','กาญจนบุรี','กาฬสินธุ์','กำแพงเพชร','ขอนแก่น','จันทบุรี','ฉะเชิงเทรา','ชลบุรี','ชัยนาท','ชัยภูมิ','ชุมพร','เชียงราย','เชียงใหม่','ตรัง','ตราด','ตาก','นครนายก','นครปฐม','นครพนม','นครราชสีมา','นครศรีธรรมราช','นครสวรรค์','นนทบุรี','นราธิวาส','น่าน','บึงกาฬ','บุรีรัมย์','ปทุมธานี','ประจวบคีรีขันธ์','ปราจีนบุรี','ปัตตานี','พระนครศรีอยุธยา','พะเยา','พังงา','พัทลุง','พิจิตร','พิษณุโลก','เพชรบุรี','เพชรบูรณ์','แพร่','ภูเก็ต','มหาสารคาม','มุกดาหาร','แม่ฮ่องสอน','ยโสธร','ยะลา','ร้อยเอ็ด','ระนอง','ระยอง','ราชบุรี','ลพบุรี','ลำปาง','ลำพูน','เลย','ศรีสะเกษ','สกลนคร','สงขลา','สตูล','สมุทรปราการ','สมุทรสงคราม','สมุทรสาคร','สระแก้ว','สระบุรี','สิงห์บุรี','สุโขทัย','สุพรรณบุรี','สุราษฎร์ธานี','สุรินทร์','หนองคาย','หนองบัวลำภู','อ่างทอง','อำนาจเจริญ','อุดรธานี','อุตรดิตถ์','อุทัยธานี','อุบลราชธานี'];
+// ใส่ URL เว็บแอป Apps Script ไว้ตรงนี้ เพื่อให้ทุกเครื่องแก้ไขลงชีตได้ทันที (หรือตั้งค่าในหน้าเว็บ)
+const DEFAULT_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxJ7yIg_gc9eHmjQqvo1eCH2GEsulqSb-J37KPTcjRSJpjQ0WGW27lvWXNsqVphJNtQ/exec';
+const SCRIPT_KEY='plate-dashboard-script', OVR_KEY='plate-dashboard-overrides';
+// key/user = บัญชีแอดมินที่ล็อกอินอยู่ (Apps Script ตรวจสอบทุกครั้งที่แก้ไข)
+function scriptCfg(){ let url=DEFAULT_SCRIPT_URL; try{ const c=JSON.parse(localStorage.getItem(SCRIPT_KEY)); if(c&&c.url) url=c.url; }catch(e){} const a=adminSession()||{}; return {url, key:a.pass||'', user:a.user||''}; }
+function loadOvr(){ try{ return JSON.parse(localStorage.getItem(OVR_KEY))||{}; }catch(e){ return {}; } }
+function applyOverride(r){
+  const o=loadOvr()[rowKey(r)];
+  return o ? {...r, plate:o.plate, province:o.province, owner:(o.owner!=null?o.owner:r.owner), edited:true} : r;
+}
+let editing=null;
+function openEdit(key){
+  if(!isAdmin()) return openLogin();
+  const r=data.find(x=>rowKey(x)===key); if(!r) return;
+  editing=r;
+  $('editMeta').innerHTML=`เข้า ${fmtDate(r.entryTs)} ${fmtTime(r.entryTs)} · ออก ${r.exitTs?fmtDate(r.exitTs)+' '+fmtTime(r.exitTs):'–'}<br>ป้ายเดิม: <b>${esc(r.plate)}</b> · ${esc(r.province||'ไม่ทราบจังหวัด')}`;
+  $('editPlate').value=r.plate;
+  const list=[...PROVINCES]; if(r.province && !unk(r.province) && !list.includes(r.province)) list.unshift(r.province);
+  $('editProv').innerHTML=`<option value="ไม่ทราบจังหวัด">⚠ ไม่ทราบจังหวัด</option>`+list.map(p=>`<option>${esc(p)}</option>`).join('');
+  $('editProv').value = unk(r.province) ? 'ไม่ทราบจังหวัด' : r.province;
+  $('editOwner').value = r.owner || '';
+  $('editOwner').placeholder = ownerOf(r) && !r.owner ? `ไม่บังคับ (จากป้ายที่ลงทะเบียน: ${ownerOf(r)})` : 'ไม่บังคับ';
+  const cfg=scriptCfg();
+  setEditMsg(live.url && !cfg.url ? 'info' : '', live.url && !cfg.url ? 'ยังไม่ได้ตั้งค่า Apps Script — จะบันทึกไว้เฉพาะในเครื่องนี้ (ไม่เปลี่ยนใน Google Sheet)' : (live.url ? 'จะบันทึกลง Google Sheet' : ''));
+  $('editSave').disabled=false;
+  $('editDlg').showModal();
+  setTimeout(()=>$('editPlate').focus(),50);
+}
+function setEditMsg(cls,txt){ const m=$('editMsg'); m.className='m-msg '+cls; m.textContent=txt; }
+async function saveEdit(){
+  const r=editing; if(!r) return;
+  const plate=$('editPlate').value.trim().replace(/\s+/g,''), province=$('editProv').value, owner=$('editOwner').value.trim();
+  if(!plate){ setEditMsg('err','กรุณากรอกป้ายทะเบียน'); return; }
+  if(plate===r.plate && province===(r.province||'ไม่ทราบจังหวัด') && owner===(r.owner||'')){ $('editDlg').close(); return; }
+  const key=rowKey(r), cfg=scriptCfg();
+
+  if(live.url && cfg.url){
+    // บันทึกลง Google Sheet ผ่าน Apps Script
+    $('editSave').disabled=true; setEditMsg('','กำลังบันทึกลง Google Sheet…');
+    try{
+      const gid=(String(live.url).match(/[#&?]gid=(\d+)/)||[])[1]||'';
+      const res=await fetch(cfg.url,{method:'POST',body:JSON.stringify({action:'updatePlate',key:cfg.key,user:cfg.user,gid,entryId:r.entryId||'',epoch:r.epoch||'',oldPlate:r.plate,plate,province,owner})});
+      const out=await res.json();
+      if(out.auth===false){ authExpired(); return; }
+      if(!out.ok) throw new Error(out.error||'บันทึกไม่สำเร็จ');
+      const ovr=loadOvr(); if(ovr[key]){ delete ovr[key]; try{ localStorage.setItem(OVR_KEY,JSON.stringify(ovr)); }catch(e){} }
+      Object.assign(r,{plate,province,owner,edited:false});
+      $('editDlg').close(); buildFilters(); render();
+      toastOk('บันทึกลง Google Sheet แล้ว',`${esc(plate)} · ${esc(province)}`);
+      live.lastText=null; pollSheet();
+    }catch(e){
+      $('editSave').disabled=false;
+      setEditMsg('err','บันทึกไม่สำเร็จ: '+e.message+' — ตรวจสอบ URL Apps Script / รหัสลับ');
+    }
+    return;
+  }
+
+  if(live.url){
+    // ยังไม่มี Apps Script → เก็บการแก้ไขไว้ในเครื่อง แล้วนำไปใช้ทุกครั้งที่ดึงข้อมูล
+    const ovr=loadOvr(); ovr[key]={plate,province,owner};
+    try{ localStorage.setItem(OVR_KEY,JSON.stringify(ovr)); }catch(e){}
+    Object.assign(r,{plate,province,owner,edited:true});
+  }else{
+    Object.assign(r,{plate,province,owner}); save();
+  }
+  $('editDlg').close(); buildFilters(); render(); updateOvrSync();
+  toastOk('แก้ไขแล้ว',`${esc(plate)} · ${esc(province)}${live.url?' (เฉพาะในเครื่องนี้)':''}`);
+}
+$('rows').addEventListener('click',e=>{ const b=e.target.closest('.edit-btn'); if(b) openEdit(b.dataset.key); });
+$('editForm').addEventListener('submit',e=>{ e.preventDefault(); saveEdit(); });
+$('editCancel').onclick=()=>$('editDlg').close();
+$('editDlg').addEventListener('click',e=>{ if(e.target===$('editDlg')) $('editDlg').close(); });
+// ตั้งค่า Apps Script
+(function(){ const c=scriptCfg(); $('scriptUrl').value=c.url||''; })();
+$('scriptSave').onclick=async()=>{
+  if(!isAdmin()) return;
+  const url=$('scriptUrl').value.trim();
+  if(url && !/^https:\/\/script\.google(usercontent)?\.com\//.test(url)){ $('scriptHint').textContent='URL ไม่ถูกต้อง — ต้องเป็น URL เว็บแอปจาก script.google.com'; return; }
+  try{ localStorage.setItem(SCRIPT_KEY,JSON.stringify({url})); }catch(e){}
+  if(!url){ $('scriptHint').textContent='ลบการตั้งค่าแล้ว — การแก้ไขจะบันทึกไว้เฉพาะในเครื่องนี้'; return; }
+  $('scriptHint').textContent='กำลังทดสอบการเชื่อมต่อ…';
+  try{
+    const out=await (await fetch(url)).json();
+    $('scriptHint').textContent = (out.ok && /Plate dashboard/.test(out.message||''))
+      ? '✓ เชื่อมต่อ Apps Script ของ Dashboard ได้ — การแก้ไขจะบันทึกลง Google Sheet'
+      : '✗ URL นี้ตอบกลับได้ แต่ไม่ใช่สคริปต์ของ Dashboard — ใช้ URL จากโปรเจกต์ที่วางโค้ด google-apps-script.gs';
+    updateOvrSync();
+    // ตรวจว่ารหัสผ่านที่ล็อกอินอยู่ตรงกับ Apps Script ไหม ถ้าไม่ตรงให้ล็อกอินใหม่ทันที
+    if(out.ok){ try{ await callScript({action:'login'}); }catch(e){} }
+  }catch(e){
+    $('scriptHint').textContent='✗ เชื่อมต่อไม่สำเร็จ — URL นี้อาจเป็นสคริปต์อื่น (เช่น สคริปต์รับข้อมูลจากกล้องที่ส่งหน้าเว็บกลับมา) ให้สร้างโปรเจกต์ใหม่ที่ script.google.com วางโค้ด google-apps-script.gs แล้ว Deploy เป็นเว็บแอป ตั้ง "ผู้ที่มีสิทธิ์เข้าถึง: ทุกคน"';
+  }
+};
+// อัปโหลดการแก้ไขที่เคยเก็บไว้ในเครื่อง ขึ้น Google Sheet (หลังตั้งค่า Apps Script แล้ว)
+function updateOvrSync(){
+  const n=Object.keys(loadOvr()).length, ok=!!(live.url && scriptCfg().url);
+  $('ovrRow').hidden = !n;
+  $('ovrText').textContent = ok ? `มีการแก้ไขที่ยังอยู่แค่ในเครื่องนี้ ${n} รายการ` : `มีการแก้ไขที่อยู่แค่ในเครื่องนี้ ${n} รายการ — ตั้งค่า Apps Script ก่อนจึงจะอัปโหลดได้`;
+  $('ovrSync').hidden = !ok;
+}
+$('ovrSync').onclick=async()=>{
+  if(!isAdmin()) return;
+  const ovr=loadOvr(), keys=Object.keys(ovr), gid=(String(live.url).match(/[#&?]gid=(\d+)/)||[])[1]||'';
+  $('ovrSync').disabled=true; let done=0, fail=[];
+  for(const k of keys){
+    $('ovrText').textContent=`กำลังอัปโหลด ${done+1}/${keys.length}…`;
+    const o=ovr[k];
+    try{
+      if(k.includes('|')) throw new Error('ไม่มี Entry_Event_ID');
+      await callScript({action:'updatePlate',gid,entryId:k,plate:o.plate,province:o.province,owner:o.owner!=null?o.owner:null});
+      delete ovr[k]; done++;
+    }catch(e){ fail.push(`${o.plate}: ${e.message}`); }
+  }
+  try{ localStorage.setItem(OVR_KEY,JSON.stringify(ovr)); }catch(e){}
+  $('ovrSync').disabled=false;
+  live.lastText=null; await pollSheet(); updateOvrSync();
+  if(fail.length) $('scriptHint').textContent=`อัปโหลดสำเร็จ ${done} รายการ, ไม่สำเร็จ ${fail.length}: ${fail.join(' · ')}`;
+  else toastOk('อัปโหลดขึ้น Google Sheet แล้ว',`${done} รายการ`);
+};
+
+// ---------- ประวัติไม้กั้น (แท็บ GateLog — รูปแบบเดียวกับสคริปต์กล้องของเพื่อน) ----------
+let gateLogSig='';
+function gateTs(d,t){ return ts(d,t); }
+// แปลงแถว GateLog จาก Apps Script (null = ยังไม่มีแท็บ)
+function gateLogFrom(objs){
+  if(!objs) return null;
+  return objs.map(o=>({at:gateTs(o.Date,o.Time),date:String(o.Date||''),time:String(o.Time||''),action:String(o.Action||'').trim(),
+    source:String(o.Source||'').trim(),plate:String(o.Plate_Number||'').trim(),id:String(o.Event_ID||'')})).filter(x=>x.action);
+}
+async function loadGateLog(){ live.lastText=null; gateLogSig=''; await pollSheet(); }
+function renderGateLog(list){
+  if(!list){ $('gateLogRows').innerHTML='<tr><td colspan="5" class="empty">ยังไม่มีข้อมูลไม้กั้น — แท็บ GateLog จะถูกสร้างเมื่อไม้กั้นเปิด/ปิดครั้งแรก</td></tr>'; $('gateToday').innerHTML=''; $('gateLogFoot').textContent=''; return; }
+  list.sort((a,b)=>(b.at||0)-(a.at||0));
+  const today=isoDay(Date.now()), td=list.filter(x=>x.at!=null && isoDay(x.at)===today);
+  const opens=td.filter(x=>x.action==='เปิด');
+  const bySrc=s=>opens.filter(x=>x.source.includes(s)).length;
+  $('gateToday').innerHTML=`<span>วันนี้เปิด <b>${opens.length}</b> ครั้ง</span><span>อ่านป้าย <b>${bySrc('อ่านป้าย')}</b></span><span>กดปุ่ม <b>${bySrc('ปุ่ม')}</b></span>`;
+  const rows=list.slice(0,30);
+  $('gateLogRows').innerHTML = rows.length ? rows.map(x=>{
+    const reg=x.plate?regFind({plate:x.plate,province:''}):null;
+    return `<tr><td class="num" data-label="วันที่">${esc(x.date)}</td><td class="num" data-label="เวลา">${esc(x.time)}</td>
+      <td data-label="การทำงาน"><span class="pill ${x.action==='เปิด'?'gopen':'gclose'}">${x.action==='เปิด'?'▲ เปิด':'▼ ปิด'}</span></td>
+      <td data-label="ที่มา">${esc(x.source||'–')}</td>
+      <td data-label="ป้ายทะเบียน">${x.plate?`<b>${esc(x.plate)}</b>${reg?regBadge(reg):OUTSIDE_BADGE}`:'<span style="color:var(--muted)">–</span>'}</td></tr>`;
+  }).join('') : '<tr><td colspan="5" class="empty">ยังไม่มีการเปิด–ปิดไม้กั้น</td></tr>';
+  $('gateLogFoot').textContent=`แสดง ${rows.length} จาก ${list.length} รายการล่าสุด`;
+}
+
+// ---------- ไม้กั้น ----------
+let gateTimer=null, gateBusy=false;
+function renderGate(s){
+  const el=$('gateStatus');
+  if(!s){ el.className='gate-status offline'; el.innerHTML='<span class="dot"></span>ตรวจสอบสถานะไม่ได้ <small>(ต้องตั้งค่า Apps Script และ Deploy เวอร์ชันล่าสุด)</small>'; return; }
+  const seen=s.lastSeen?fmtTime(s.lastSeen):'–';
+  if(!s.online){ el.className='gate-status offline'; el.innerHTML=`<span class="dot"></span>อุปกรณ์ไม้กั้นออฟไลน์ <small>ติดต่อล่าสุด ${seen}</small>`; }
+  else if(s.state==='open'){ el.className='gate-status open'; el.innerHTML=`<span class="dot"></span>ไม้กั้นเปิดอยู่ <small>อัปเดต ${seen}</small>`; }
+  else { el.className='gate-status closed'; el.innerHTML=`<span class="dot"></span>ไม้กั้นปิดอยู่ <small>อัปเดต ${seen}</small>`; }
+  if(s.pending) el.innerHTML+=` <small>· กำลังส่งคำสั่ง “${s.pending.action==='open'?'เปิด':'ปิด'}” ไปที่อุปกรณ์…</small>`;
+}
+async function pollGate(){
+  const url=scriptCfg().url; if(!url||!isAdmin()) return;
+  try{ const s=await (await fetch(url+(url.includes('?')?'&':'?')+'action=gateStatus&_='+Date.now())).json(); renderGate(s&&s.ok?s:null); }
+  catch(e){ renderGate(null); }
+}
+function startGatePolling(){ clearInterval(gateTimer); if(isAdmin() && currentView==='admin'){ pollGate(); gateTimer=setInterval(()=>{ if(!document.hidden) pollGate(); },3000); } }
+async function sendGate(cmd){
+  if(!isAdmin()||gateBusy) return;
+  if(!regUsesSheet()){ toast('ยังไม่ได้ตั้งค่า Apps Script','ตั้งค่า URL Apps Script ในหน้าแอดมินก่อน',null,5000); return; }
+  gateBusy=true; ['gateOpen','gateClose'].forEach(id=>$(id).disabled=true);
+  try{
+    const out=await callScript({action:'gate',cmd});
+    renderGate(out);
+    toastOk(cmd==='open'?'ส่งคำสั่งเปิดไม้กั้นแล้ว':'ส่งคำสั่งปิดไม้กั้นแล้ว', out.online?'อุปกรณ์จะทำตามภายในไม่กี่วินาที':'⚠ อุปกรณ์ออฟไลน์อยู่ — คำสั่งจะหมดอายุใน 1 นาที');
+    gateLogSig=''; loadGateLog();
+  }catch(e){ toast('ส่งคำสั่งไม่สำเร็จ',esc(e.message),null,6000); }
+  finally{ gateBusy=false; ['gateOpen','gateClose'].forEach(id=>$(id).disabled=false); }
+}
+$('gateOpen').onclick=()=>sendGate('open');
+$('gateClose').onclick=()=>sendGate('close');
+
+// ---------- แท็บย่อยในหน้าแอดมิน (เปิดทีละหมวด จำหมวดล่าสุดไว้) ----------
+function showAdminTab(t){
+  const tabs=[...document.querySelectorAll('#adminTabs button')];
+  if(!tabs.some(b=>b.dataset.atab===t)) t=tabs[0].dataset.atab;
+  tabs.forEach(b=>b.classList.toggle('active',b.dataset.atab===t));
+  const secs=[...document.querySelectorAll('#adminPanel .admin-sec[data-atab]')];
+  secs.forEach(s=>s.classList.remove('atab-on','atab-first'));
+  const on=secs.filter(s=>s.dataset.atab===t);
+  on.forEach(s=>s.classList.add('atab-on'));
+  // หัวข้อแรกที่มองเห็น (ตามลำดับที่แสดงจริง) ไม่ต้องมีเส้นคั่นด้านบน
+  const visible=on.filter(s=>getComputedStyle(s).display!=='none').sort((a,b)=>(+a.style.order||0)-(+b.style.order||0));
+  if(visible[0]) visible[0].classList.add('atab-first');
+  try{ localStorage.setItem('plate-dashboard-admintab',t); }catch(e){}
+}
+$('adminTabs').addEventListener('click',e=>{ const b=e.target.closest('button[data-atab]'); if(b) showAdminTab(b.dataset.atab); });
+(()=>{ let t='gate'; try{ t=localStorage.getItem('plate-dashboard-admintab')||t; }catch(e){} showAdminTab(t); })();
+
+// ---------- แท็บ 1: หน้าไม้กั้นสำหรับยาม ----------
+let guardTimer=null, guardBusy=false, guardSending=false;
+const guardRole=()=>gateSess() ? 'gate' : 'admin';
+function guardCall(payload){ return guardRole()==='gate' ? apiCall(payload,'gate') : callScript(payload); }
+function startGuardPolling(on){
+  clearInterval(guardTimer); guardTimer=null;
+  if(on){ pollGuard(); guardTimer=setInterval(()=>{ if(!document.hidden) pollGuard(); },3000); }
+}
+async function pollGuard(){
+  if(guardBusy) return; guardBusy=true;
+  try{ renderGuard(await guardCall({action:'gateView'})); }
+  catch(e){ if(e.message!=='auth') renderGuardStatus(null, e.message); }
+  finally{ guardBusy=false; }
+}
+function renderGuardStatus(s, err){
+  const el=$('guardStatus');
+  if(!s){ el.className='guard-status offline'; el.innerHTML=`<span class="dot"></span><span>ตรวจสอบสถานะไม่ได้</span><small>${esc(err||'เชื่อมต่อไม่ได้')} — ลองตรวจอินเทอร์เน็ต</small>`; return; }
+  const seen=s.lastSeen?fmtTime(s.lastSeen):'–';
+  let html;
+  if(!s.online){ el.className='guard-status offline'; html=`<span class="dot"></span><span>อุปกรณ์ไม้กั้นออฟไลน์</span><small>ติดต่อล่าสุด ${seen} — ปุ่มจะยังใช้ไม่ได้จนกว่าอุปกรณ์จะกลับมา</small>`; }
+  else if(s.state==='open'){ el.className='guard-status open'; html=`<span class="dot"></span><span>ไม้กั้นเปิดอยู่</span><small>อัปเดต ${seen}</small>`; }
+  else { el.className='guard-status closed'; html=`<span class="dot"></span><span>ไม้กั้นปิดอยู่</span><small>อัปเดต ${seen}</small>`; }
+  if(s.pending) html+=`<small>กำลังส่งคำสั่ง “${s.pending.action==='open'?'เปิด':'ปิด'}” ไปที่ไม้กั้น…</small>`;
+  el.innerHTML=html;
+}
+function renderGuard(out){
+  renderGuardStatus(out.status);
+  setRegistry((out.registry||[]).map(x=>({plate:normPlate(x.plate),province:x.province||'',category:x.category||'',name:x.name||'',note:x.note||''})));
+  // รถที่เพิ่งผ่านกล้อง: แยกเป็นเหตุการณ์ เข้า / ออก เรียงล่าสุดก่อน
+  const ev=[];
+  (out.recent||[]).map(normalize).filter(Boolean).forEach(r=>{
+    if(r.entryTs!=null) ev.push({r,dir:'in',t:r.entryTs});
+    if(r.exitTs!=null) ev.push({r,dir:'out',t:r.exitTs});
+  });
+  ev.sort((a,b)=>b.t-a.t);
+  const today=isoDay(Date.now());
+  $('guardRecent').innerHTML = ev.length ? ev.slice(0,12).map(({r,dir,t})=>{
+    const g=regFind(r), who=ownerOf(r), cat=catOf(r);
+    const tag = g || cat ? `<span class="reg-yes">✓ ${esc(cat||'ลงทะเบียน')}</span>` : `<span class="reg-no">! บุคคลภายนอก</span>`;
+    return `<div class="g-item${g||cat?'':' unreg'}">
+      <span class="g-dir ${dir}">${dir==='in'?'เข้า':'ออก'}</span>
+      <div><div class="g-plate">${esc(r.plate)} ${tag}</div><div class="g-sub">${provCell(r.province)}${who?' · '+esc(who):''}</div></div>
+      <div class="g-time"><b>${fmtTime(t).slice(0,5)}</b>${isoDay(t)===today?'วันนี้':fmtDate(t)}</div></div>`;
+  }).join('') : '<div class="empty">ยังไม่มีรถผ่านกล้อง</div>';
+  const gl=gateLogFrom(out.gateLog);
+  $('guardLog').innerHTML = gl && gl.length ? gl.sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,8).map(x=>
+    `<div class="g-item"><span class="pill ${x.action==='เปิด'?'gopen':'gclose'}">${x.action==='เปิด'?'▲ เปิด':'▼ ปิด'}</span>
+      <div><div style="font-weight:600">${esc(x.source||'–')}</div><div class="g-sub">${x.plate?esc(x.plate):''}</div></div>
+      <div class="g-time"><b>${esc(String(x.time).slice(0,5))}</b>${x.at!=null&&isoDay(x.at)===today?'วันนี้':esc(x.date)}</div></div>`).join('')
+    : '<div class="empty">ยังไม่มีประวัติการเปิด–ปิด</div>';
+}
+async function guardSend(cmd){
+  if(guardSending) return; guardSending=true;
+  ['guardOpen','guardClose'].forEach(id=>$(id).disabled=true);
+  try{
+    const out=await guardCall({action:'gate',cmd});
+    renderGuardStatus(out);
+    toastOk(cmd==='open'?'ส่งคำสั่งเปิดไม้กั้นแล้ว':'ส่งคำสั่งปิดไม้กั้นแล้ว', out.online?'ไม้กั้นจะทำตามภายในไม่กี่วินาที':'⚠ อุปกรณ์ออฟไลน์อยู่ — คำสั่งจะหมดอายุใน 1 นาที');
+  }catch(e){ if(e.message!=='auth') toast('ส่งคำสั่งไม่สำเร็จ',esc(e.message),null,6000); }
+  finally{ guardSending=false; ['guardOpen','guardClose'].forEach(id=>$(id).disabled=false); setTimeout(pollGuard,1500); }
+}
+$('guardOpen').onclick=()=>guardSend('open');
+$('guardClose').onclick=()=>guardSend('close');
+$('guardLogout').onclick=()=>{
+  const s=gateSess(); if(s){ const url=scriptCfg().url; if(url) fetch(url,{method:'POST',body:JSON.stringify({action:'logout',token:s.token})}).catch(()=>{}); setSess('gate',null); route(); }
+  else logout();
+};
+$('viewerLogout').onclick=()=>{
+  const s=viewerSess(); if(s){ const url=scriptCfg().url; if(url) fetch(url,{method:'POST',body:JSON.stringify({action:'logout',token:s.token})}).catch(()=>{}); setSess('viewer',null); clearData(); route(); }
+  else logout();
+};
+
+// ---------- เข้าสู่ระบบ (ใช้ร่วมทั้ง 3 แท็บ) ----------
+$('viewLoginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const v=currentView, c=VIEWS[v], user=$('vlUser').value.trim(), pass=$('vlPass').value;
+  const fail=msg=>{ loginFails++; $('vlMsg').className='m-msg err'; $('vlMsg').textContent=msg; $('vlSubmit').disabled=false; $('vlPass').select(); };
+  $('vlSubmit').disabled=true; $('vlMsg').className='m-msg'; $('vlMsg').textContent='กำลังตรวจสอบ…';
+  if(loginFails>=3) await new Promise(r=>setTimeout(r,Math.min(10000,1000*loginFails))); // หน่วงเมื่อใส่ผิดหลายครั้ง
+  try{
+    if(v==='admin'){
+      const res=await doLogin(user,pass);
+      if(!res.ok) return fail(res.msg);
+      setAdminSession({user,pass});
+      toastOk('เข้าสู่ระบบแอดมินแล้ว',`ยินดีต้อนรับ ${esc(user)}`);
+    }else{
+      const url=scriptCfg().url;
+      if(!url) return fail('ยังไม่ได้ตั้งค่า Apps Script — ติดต่อแอดมิน');
+      const out=await (await fetch(url,{method:'POST',body:JSON.stringify({action:'login',role:c.role,user,key:pass})})).json();
+      if(!out.ok){
+        if(String(out.error||'').includes('unknown')) return fail('Apps Script ยังเป็นเวอร์ชันเก่า — ให้แอดมิน Deploy เวอร์ชันล่าสุด');
+        return fail(v==='gate' ? 'รหัสผ่านไม่ถูกต้อง (หรือแอดมินยังไม่ได้ตั้งรหัสหน้าไม้กั้น)' : 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+      }
+      setSess(c.role,{token:out.token,user:out.user,name:out.name||out.user});
+    }
+    loginFails=0; $('viewLoginForm').reset(); route();
+  }catch(err){ fail('เชื่อมต่อไม่ได้ — ตรวจอินเทอร์เน็ตแล้วลองใหม่'); }
+});
+
+// ---------- แท็บ 3: จัดการบัญชี (แอดมิน) ----------
+function renderUsers(out){
+  $('gatePwHint').innerHTML = out.gatePasswordSet
+    ? `✓ ตั้งรหัสแล้ว (เปลี่ยนล่าสุด ${esc(out.gateUpdated||'–')}) · เปลี่ยนรหัสแล้ว ยามที่เข้าระบบอยู่ต้องเข้าสู่ระบบใหม่ด้วยรหัสใหม่`
+    : '<b style="color:var(--warn)">⚠ ยังไม่ได้ตั้งรหัส</b> — ยามจะเข้าหน้าไม้กั้นไม่ได้จนกว่าจะตั้ง';
+  const users=out.users||[];
+  $('userList').innerHTML = users.length ? users.map(u=>`<div class="u-item">
+      <div><div class="u-name">${esc(u.name||u.username)}</div><div class="u-sub">username: <b>${esc(u.username)}</b> · สร้าง ${esc(u.created||'–')}${u.updated?' · เปลี่ยนรหัส '+esc(u.updated):''}</div></div>
+      <div class="b"><button type="button" data-act="reset" data-u="${esc(u.username)}">ตั้งรหัสใหม่</button><button type="button" class="del" data-act="del" data-u="${esc(u.username)}">ลบ</button></div>
+    </div>`).join('') : '<div class="empty">ยังไม่มีบัญชีบุคลากร — เพิ่มบัญชีแรกด้านบน</div>';
+}
+async function loadUsers(){
+  if(!isAdmin()) return;
+  try{ renderUsers(await callScript({action:'listUsers'})); }
+  catch(e){ $('gatePwHint').textContent='โหลดข้อมูลบัญชีไม่ได้: '+e.message+' (ต้อง Deploy Apps Script เวอร์ชันล่าสุด)'; }
+}
+$('gatePwSave').onclick=async()=>{
+  const pw=$('gatePwNew').value;
+  if(pw.length<4){ $('gatePwHint').textContent='รหัสผ่านต้องยาวอย่างน้อย 4 ตัวอักษร'; return; }
+  if(!confirm('ตั้งรหัสผ่านหน้าไม้กั้นใหม่? ยามที่เข้าระบบอยู่จะต้องเข้าสู่ระบบใหม่')) return;
+  $('gatePwSave').disabled=true;
+  try{ renderUsers(await callScript({action:'setGatePassword',password:pw})); $('gatePwNew').value=''; toastOk('ตั้งรหัสผ่านหน้าไม้กั้นแล้ว','แจ้งรหัสใหม่ให้ยาม'); }
+  catch(e){ $('gatePwHint').textContent='บันทึกไม่สำเร็จ: '+e.message; }
+  finally{ $('gatePwSave').disabled=false; }
+};
+$('userForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const name=$('uName').value.trim(), username=$('uUser').value.trim(), password=$('uPass').value;
+  if(!username||!password){ $('userMsg').textContent='กรอก username และรหัสผ่าน'; return; }
+  $('uAdd').disabled=true; $('userMsg').textContent='กำลังเพิ่ม…';
+  try{ renderUsers(await callScript({action:'addUser',name,username,password})); $('userForm').reset(); $('userMsg').textContent=`✓ เพิ่มบัญชี ${username.toLowerCase()} แล้ว — แจ้ง username และรหัสผ่านให้เจ้าของบัญชี`; }
+  catch(err){ $('userMsg').textContent='เพิ่มไม่สำเร็จ: '+err.message; }
+  finally{ $('uAdd').disabled=false; }
+});
+$('userList').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-act]'); if(!b) return;
+  const u=b.dataset.u;
+  try{
+    if(b.dataset.act==='reset'){
+      const pw=prompt(`ตั้งรหัสผ่านใหม่ให้ ${u} (อย่างน้อย 6 ตัวอักษร)`); if(pw==null) return;
+      renderUsers(await callScript({action:'resetUserPassword',username:u,password:pw}));
+      $('userMsg').textContent=`✓ ตั้งรหัสใหม่ให้ ${u} แล้ว — ผู้ใช้ต้องเข้าสู่ระบบใหม่`;
+    }else if(confirm(`ลบบัญชี ${u}? ผู้ใช้นี้จะเข้าหน้า Dashboard ไม่ได้ทันที`)){
+      renderUsers(await callScript({action:'deleteUser',username:u}));
+      $('userMsg').textContent=`ลบบัญชี ${u} แล้ว`;
+    }
+  }catch(err){ $('userMsg').textContent='ไม่สำเร็จ: '+err.message; }
+});
+
+$('cleanupBtn').onclick=async()=>{
+  if(!isAdmin()) return;
+  if(!regUsesSheet()){ $('scriptHint').textContent='ต้องตั้งค่า URL Apps Script ของ Dashboard ก่อน จึงจะลบข้อมูลในชีตได้'; return; }
+  const L=retentionLabel();
+  if(!confirm(`ลบข้อมูลรถเข้า-ออกที่เก่ากว่า ${L.from} ออกจาก Google Sheet ถาวร?\n(เก็บไว้: ${L.months} · รถที่ยังจอดอยู่และรายชื่อเจ้าของจะไม่ถูกลบ)`)) return;
+  const b=$('cleanupBtn'); b.disabled=true; b.textContent='กำลังลบ…';
+  try{
+    const out=await callScript({action:'cleanup'});
+    toastOk('ลบข้อมูลเก่าแล้ว', out.deleted ? `ลบ ${out.deleted} แถว · เก็บตั้งแต่ ${out.keepFrom}` : 'ไม่มีข้อมูลที่เก่ากว่า 3 เดือน');
+    live.lastText=null; pollSheet();
+  }catch(e){ $('scriptHint').textContent='ลบข้อมูลไม่สำเร็จ: '+e.message; }
+  finally{ b.disabled=false; b.textContent='ลบข้อมูลที่เก่ากว่า 3 เดือนตอนนี้'; }
+};
+
+$('syncOwnersBtn').onclick=async()=>{
+  if(!isAdmin()) return;
+  if(!regUsesSheet()){ $('scriptHint').textContent='ต้องตั้งค่า URL Apps Script ของ Dashboard ก่อน จึงจะเขียนชื่อลงชีตได้'; return; }
+  const b=$('syncOwnersBtn'); b.disabled=true; b.textContent='กำลังเติมชื่อและตำแหน่ง…';
+  try{
+    // อัปโหลดป้ายที่ลงทะเบียนไว้ในเครื่อง (ถ้ามี) ขึ้นชีตก่อน แล้วค่อยเติมชื่อ
+    if(sheetRegPlates==null) await loadRegistry();
+    const pending=pendingLocalReg();
+    for(const e of pending){ const {pending:_p,...item}=e; await callScript({action:'addRegistered',...item}); dropLocalReg(e.plate); }
+    if(pending.length) await loadRegistry();
+    const out=await callScript({action:'syncOwners'});
+    toastOk('เติมชื่อและตำแหน่งลงชีตแล้ว', `${out.filled||0} แถว${pending.length?` · อัปโหลดป้ายจากเครื่องนี้ ${pending.length} ป้าย`:''}`);
+    live.lastText=null; pollSheet();
+  }catch(e){ $('scriptHint').textContent='เติมชื่อไม่สำเร็จ: '+e.message; }
+  finally{ b.disabled=false; b.textContent='เติมชื่อและตำแหน่งลงชีตตอนนี้'; }
+};
+
+function toastOk(title,msg){
+  toast(title,msg,null,4000);
+  const t=toastBox.lastElementChild; t.style.borderLeftColor='var(--ok)';
+  const ic=t.querySelector('.t-ic'); ic.textContent='✓'; ic.style.background='var(--ok-soft)'; ic.style.color='var(--ok)';
+}
+
+// ---------- ป้ายทะเบียนที่ลงทะเบียน (บุคลากร) ----------
+const REG_SHEET='ทะเบียนบุคลากร', REG_LOCAL='plate-dashboard-registry', OUTSIDE='__outside';
+const CATS=[{v:'ผู้อำนวยการ',c:'c-dir'},{v:'ครู',c:'c-teach'},{v:'บุคลากร',c:'c-staff'},{v:'บุคคลภายใน',c:'c-inside'}];
+const catCls=v=>(CATS.find(c=>c.v===v)||{c:'c-staff'}).c;
+const normPlate=p=>String(p||'').replace(/[\s\-]/g,'');
+function regLocalLoad(){ try{ return JSON.parse(localStorage.getItem(REG_LOCAL))||[]; }catch(e){ return []; } }
+function regLocalSave(list){ try{ localStorage.setItem(REG_LOCAL,JSON.stringify(list)); }catch(e){} }
+function regUsesSheet(){ return !!(live.url && scriptCfg().url); }
+let registry=[], regMap=new Map(), regSig='', regEditing=null;
+function setRegistry(list){
+  const sig=JSON.stringify(list); if(sig===regSig) return false;
+  regSig=sig; registry=list; regMap=new Map();
+  list.forEach(e=>{ const k=normPlate(e.plate); if(!regMap.has(k)) regMap.set(k,[]); regMap.get(k).push(e); });
+  return true;
+}
+function regFind(r){
+  const list=regMap.get(normPlate(r.plate)); if(!list) return null;
+  // ถ้าระบุจังหวัดทั้งสองฝั่ง ต้องตรงกัน (ป้ายเลขเดียวกันต่างจังหวัด = คนละคัน)
+  return list.find(e=>!e.province || unk(r.province) || e.province===r.province) || null;
+}
+function regBadge(g){ return g ? `<span class="cat-badge" title="${esc(g.name||g.category)}"><i class="${catCls(g.category)}"></i>${esc(g.category||'ลงทะเบียน')}</span>` : ''; }
+function afterRegChange(){ render(); if($('regDlg').open) renderRegList(); }
+
+// ป้ายที่อยู่ในชีตจริง (null = ยังไม่รู้) — ใช้แยกว่าป้ายไหนยังค้างอยู่แค่ในเครื่องนี้
+let sheetRegPlates=null;
+function pendingLocalReg(){ return sheetRegPlates ? regLocalLoad().filter(e=>!sheetRegPlates.has(normPlate(e.plate))) : []; }
+// รายชื่อป้ายที่ลงทะเบียนจาก Apps Script (null = ยังไม่มีแท็บ) + ป้ายที่ยังค้างในเครื่อง (รออัปโหลด)
+function applyRegistryList(items){
+  const list=(items||[]).map(x=>({plate:normPlate(x.plate),province:x.province||'',category:x.category||'',name:x.name||'',note:x.note||''})).filter(x=>x.plate);
+  sheetRegPlates=new Set(list.map(e=>normPlate(e.plate)));
+  const pending=pendingLocalReg().map(e=>({...e,pending:true}));
+  if(setRegistry([...list,...pending])) afterRegChange();
+  else if($('regDlg').open) renderRegSrc();
+}
+async function loadRegistry(){
+  try{ const out=await fetchDashData(); applyRegistryList(out.registry); }catch(e){}
+}
+function dropLocalReg(...plates){
+  const ks=plates.filter(Boolean).map(normPlate);
+  regLocalSave(regLocalLoad().filter(e=>!ks.includes(normPlate(e.plate))));
+}
+async function callScript(payload){
+  const cfg=scriptCfg();
+  const res=await fetch(cfg.url,{method:'POST',body:JSON.stringify({...payload,key:cfg.key,user:cfg.user})});
+  const out=await res.json();
+  if(out.auth===false){ authExpired(); throw new Error('รหัสผ่านไม่ตรงกับ Apps Script — กรุณาเข้าสู่ระบบใหม่'); }
+  if(!out.ok) throw new Error(out.error||'บันทึกไม่สำเร็จ'); return out;
+}
+function setRegMsg(cls,txt){ const m=$('regMsg'); m.className='m-msg '+cls; m.textContent=txt; }
+
+function openRegistry(prefill){
+  if(!isAdmin()) return openLogin();
+  $('regProv').innerHTML='<option value="">ไม่ระบุ</option>'+PROVINCES.map(p=>`<option>${esc(p)}</option>`).join('');
+  $('regCat').innerHTML=CATS.map(c=>`<option>${c.v}</option>`).join('');
+  resetRegForm();
+  if(prefill){ $('regPlate').value=prefill.plate||''; if(prefill.province && !unk(prefill.province)) $('regProv').value=prefill.province; }
+  renderRegSrc(); renderRegList(); setRegMsg('','');
+  $('regDlg').showModal();
+}
+function renderRegSrc(){
+  const local=regLocalLoad();
+  if(regUsesSheet()){
+    const pending=pendingLocalReg();
+    $('regSrc').innerHTML=`บันทึกใน Google Sheet แท็บ “${REG_SHEET}” — ทุกเครื่องเห็นข้อมูลเดียวกัน`+
+      (sheetRegPlates==null ? ' · กำลังตรวจสอบข้อมูลในชีต…' : '')+
+      (pending.length?`<br><b style="color:var(--warn)">⚠ มี ${pending.length} ป้ายที่ยังอยู่แค่ในเครื่องนี้ (ยังไม่ขึ้นชีต ชื่อจะยังไม่ขึ้นตอนกล้องถ่าย)</b> <button type="button" id="regUpload" style="font-size:12px;padding:2px 8px">อัปโหลดขึ้นชีตตอนนี้</button>`:'');
+    const up=$('regUpload'); if(up) up.onclick=async()=>{
+      up.disabled=true; setRegMsg('',`กำลังอัปโหลด ${pending.length} ป้าย…`);
+      try{
+        for(const e of pending){ const {pending:_p,...item}=e; await callScript({action:'addRegistered',...item}); dropLocalReg(e.plate); }
+        setRegMsg('','อัปโหลดเรียบร้อย — ชื่อถูกเขียนลงแท็บ Owners และ Owner_Name แล้ว'); await loadRegistry(); renderRegSrc();
+        live.lastText=null; pollSheet();
+      }catch(err){ up.disabled=false; setRegMsg('err','อัปโหลดไม่สำเร็จ: '+err.message); }
+    };
+  }else{
+    $('regSrc').textContent='บันทึกไว้ในเครื่องนี้เท่านั้น — ตั้งค่า Apps Script (ในกล่องเชื่อมต่อด้านบน) เพื่อเก็บใน Google Sheet และใช้ร่วมกันทุกเครื่อง';
+  }
+}
+function renderRegList(){
+  const q=normPlate($('regSearch').value).toLowerCase();
+  const list=registry.filter(e=>!q || normPlate(e.plate).toLowerCase().includes(q) || normPlate(e.name).toLowerCase().includes(q))
+    .sort((a,b)=>CATS.findIndex(c=>c.v===a.category)-CATS.findIndex(c=>c.v===b.category) || a.plate.localeCompare(b.plate,'th'));
+  $('regCounts').innerHTML=CATS.map(c=>`<span class="cat-badge"><i class="${c.c}"></i>${c.v} ${registry.filter(e=>e.category===c.v).length}</span>`).join('');
+  $('regList').innerHTML = list.length ? list.map(e=>{
+    const visits=data.filter(r=>{ const g=regFind(r); return g && normPlate(g.plate)===normPlate(e.plate); }).length;
+    return `<div class="reg-item"><div><div class="p">${esc(e.plate)}${regBadge(e)}${e.pending&&regUsesSheet()?'<span class="tag-edit" style="background:var(--warn-soft);color:var(--warn)">ยังไม่ขึ้นชีต</span>':''}</div>
+      <div class="s">${esc(e.province||'ไม่ระบุจังหวัด')}${e.name?' · '+esc(e.name):''}${e.note?' · '+esc(e.note):''} · เข้า ${visits} ครั้ง</div></div>
+      <div class="b"><button type="button" data-act="edit" data-p="${esc(e.plate)}">แก้ไข</button><button type="button" class="del" data-act="del" data-p="${esc(e.plate)}">ลบ</button></div></div>`;
+  }).join('') : `<div class="empty">${registry.length?'ไม่พบป้ายที่ค้นหา':'ยังไม่มีป้ายที่ลงทะเบียน — เพิ่มป้ายแรกด้านบน'}</div>`;
+}
+function resetRegForm(){
+  regEditing=null; $('regForm').reset(); $('regReset').hidden=true; $('regSubmit').textContent='＋ เพิ่มป้าย';
+}
+async function regPersist(fn, okMsg){
+  $('regSubmit').disabled=true;
+  try{
+    if(regUsesSheet()){
+      setRegMsg('','กำลังบันทึกลง Google Sheet…');
+      const out=await fn.sheet(); await loadRegistry();
+      if(out && out.filled){ okMsg+=` · เขียนชื่อเจ้าของลงชีตแล้ว ${out.filled} แถว`; live.lastText=null; pollSheet(); }
+    }
+    else{ const list=fn.local(registry.map(x=>({...x}))); regLocalSave(list); setRegistry(list); afterRegChange(); }
+    setRegMsg('',okMsg); resetRegForm(); renderRegList();
+    return true;
+  }catch(e){ setRegMsg('err','บันทึกไม่สำเร็จ: '+e.message); return false; }
+  finally{ $('regSubmit').disabled=false; }
+}
+$('regForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const item={plate:normPlate($('regPlate').value),province:$('regProv').value,category:$('regCat').value,name:$('regName').value.trim(),note:$('regNote').value.trim()};
+  if(!item.plate){ setRegMsg('err','กรุณากรอกป้ายทะเบียน'); return; }
+  const old=regEditing, exists=registry.some(x=>normPlate(x.plate)===item.plate && (!old || normPlate(old.plate)!==item.plate));
+  if(exists && !confirm(`ป้าย ${item.plate} ลงทะเบียนไว้แล้ว — ต้องการแทนที่ข้อมูลเดิมหรือไม่?`)) return;
+  await regPersist({
+    sheet:async()=>{ const out=await callScript({action:'addRegistered',...item,oldPlate:old?old.plate:''}); dropLocalReg(item.plate, old&&old.plate); return out; },
+    local:list=>{ list=list.filter(x=>normPlate(x.plate)!==item.plate && (!old || normPlate(x.plate)!==normPlate(old.plate))); list.push(item); return list; }
+  }, old?`แก้ไขป้าย ${item.plate} แล้ว`:`เพิ่มป้าย ${item.plate} (${item.category}) แล้ว`);
+});
+$('regList').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-act]'); if(!b) return;
+  const entry=registry.find(x=>x.plate===b.dataset.p); if(!entry) return;
+  if(b.dataset.act==='edit'){
+    regEditing=entry;
+    $('regPlate').value=entry.plate; $('regProv').value=entry.province||''; $('regCat').value=entry.category||CATS[0].v;
+    $('regName').value=entry.name||''; $('regNote').value=entry.note||'';
+    $('regReset').hidden=false; $('regSubmit').textContent='บันทึกการแก้ไข'; setRegMsg('',`กำลังแก้ไขป้าย ${entry.plate}`);
+    $('regPlate').focus(); $('regForm').scrollIntoView({block:'nearest'});
+  }else if(confirm(`ลบป้าย ${entry.plate} (${entry.category}${entry.name?' · '+entry.name:''}) ออกจากรายการที่ลงทะเบียน?`)){
+    await regPersist({
+      sheet:async()=>{ const out=await callScript({action:'deleteRegistered',plate:entry.plate}); dropLocalReg(entry.plate); return out; },
+      local:list=>list.filter(x=>normPlate(x.plate)!==normPlate(entry.plate))
+    }, `ลบป้าย ${entry.plate} แล้ว`);
+  }
+});
+$('regReset').onclick=()=>{ resetRegForm(); setRegMsg('',''); };
+$('regSearch').addEventListener('input',renderRegList);
+$('regBtn').onclick=()=>openRegistry();
+$('regClose').onclick=()=>$('regDlg').close();
+$('regDlg').addEventListener('click',e=>{ if(e.target===$('regDlg')) $('regDlg').close(); });
+$('fType').innerHTML='<option value="">ทั้งหมด</option>'+CATS.map(c=>`<option>${c.v}</option>`).join('')+`<option value="${OUTSIDE}">บุคคลภายนอก (ไม่ลงทะเบียน)</option>`;
+setRegistry(regLocalLoad());
+
+// ---------- ธีมมืด/สว่าง ----------
+const ICON_SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const ICON_MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+function currentTheme(){
+  const t=document.documentElement.dataset.theme;
+  if(t==='light'||t==='dark') return t;
+  return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+}
+function updateThemeUI(){
+  const dark=currentTheme()==='dark';
+  // ปุ่มแสดงโหมดที่จะเปลี่ยนไป
+  $('themeBtn').innerHTML = dark ? ICON_SUN+'<span>โทนสว่าง</span>' : ICON_MOON+'<span>โทนมืด</span>';
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ m.removeAttribute('media'); m.content = dark?'#0f141c':'#f4f6f9'; });
+}
+$('themeBtn').onclick=()=>{
+  const next=currentTheme()==='dark'?'light':'dark';
+  document.documentElement.dataset.theme=next;
+  try{ localStorage.setItem('plate-dashboard-theme',next); }catch(e){}
+  updateThemeUI();
+};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',updateThemeUI);
+updateThemeUI();
+
+// ---------- ออกจากระบบแอดมิน ----------
+$('logoutBtn').onclick=logout;
+
+// ---------- events ----------
+$('file').addEventListener('change',e=>{ if(e.target.files[0]) loadFile(e.target.files[0]); e.target.value=''; });
+const drop=$('drop');
+['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+document.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) loadFile(f); });
+$('sampleBtn').onclick=()=>isAdmin() && merge(rowsFromArrays(SAMPLE));
+$('clearBtn').onclick=()=>{ if(isAdmin() && confirm('ล้างข้อมูลทั้งหมดในเบราว์เซอร์นี้?')){ data=[]; save(); buildFilters(); render(); } };
+$('exportBtn').onclick=exportCSV;
+$('resetBtn').onclick=()=>{ ['fPlate','fProv','fType','fStatus','fFrom','fTo'].forEach(id=>$(id).value=''); render(); };
+['fPlate','fProv','fType','fStatus','fFrom','fTo'].forEach(id=>$(id).addEventListener('input',render));
+document.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{ const k=th.dataset.k; sort = sort.k===k?{k,dir:-sort.dir}:{k,dir:1}; render(); });
+
+// ข้อมูลจาก Google Sheet ต้องเข้าสู่ระบบก่อนดู จึงไม่โหลดข้อมูลที่เคยเก็บไว้ในเครื่อง
+try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+data = [];
+updateRetentionText();
+buildFilters(); render();
+(function initSheet(){
+  let cfg=null; try{ cfg=JSON.parse(localStorage.getItem(SHEET_KEY)); }catch(e){}
+  if(cfg && cfg.sec) $('interval').value=cfg.sec;
+  const url = cfg ? (cfg.off ? '' : cfg.url) : DEFAULT_SHEET_URL;
+  $('sheetUrl').value = url || DEFAULT_SHEET_URL;
+  if(url) startLive(url);   // ดึงข้อมูลจริงเมื่อเข้าสู่ระบบแล้วเท่านั้น (pollSheet ตรวจสิทธิ์ก่อน)
+  route(location.hash.slice(1));
+})();
+</script>
+</body>
+</html>
