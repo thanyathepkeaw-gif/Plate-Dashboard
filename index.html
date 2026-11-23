@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f141c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eef2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563eb'/%3E%3Cpath d='M18 30 22 19Q23 16 26 16H38Q41 16 42 19L46 30' fill='none' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/%3E%3Crect x='11' y='29' width='42' height='15' rx='5' fill='%23fff'/%3E%3Ccircle cx='19' cy='36.5' r='3.2' fill='%232563eb'/%3E%3Ccircle cx='45' cy='36.5' r='3.2' fill='%232563eb'/%3E%3Crect x='26' y='33.5' width='12' height='6' rx='1.5' fill='%23fbbf24'/%3E%3Crect x='14' y='43' width='9' height='8' rx='2.5' fill='%23fff'/%3E%3Crect x='41' y='43' width='9' height='8' rx='2.5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2316a34a'/%3E%3Cstop offset='1' stop-color='%230ea5e9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cg transform='translate(12 10) scale(1.6667)' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2'/%3E%3Ccircle cx='7' cy='17' r='2'/%3E%3Cpath d='M9 17h6'/%3E%3Ccircle cx='17' cy='17' r='2'/%3E%3C/g%3E%3C/svg%3E">
 <script>
   // ใช้ธีมที่บันทึกไว้ก่อนหน้าเว็บแสดงผล (กันหน้าจอกะพริบ)
   try{ const t=localStorage.getItem('plate-dashboard-theme'); if(t==='light'||t==='dark') document.documentElement.dataset.theme=t; }catch(e){}
@@ -14,60 +14,105 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dashboard ป้ายทะเบียน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+/* ===== Design tokens (UI/UX Pro Max: Real-Time Operations · Glassmorphism · Dark tech + status green) ===== */
 :root{
-  --bg:#f4f6f9; --surface:#ffffff; --surface-2:#f0f3f7; --border:#dfe4ec;
-  --text:#18212f; --muted:#5f6b7c; --accent:#2563eb; --accent-soft:#e3ecff;
-  --ok:#15803d; --ok-soft:#dcf5e5; --warn:#b45309; --warn-soft:#fdf0d9;
-  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --grid:#e1e0d9;
+  --bg:#eef2f7; --glow-1:rgba(34,197,94,.10); --glow-2:rgba(59,130,246,.10);
+  --surface:rgba(255,255,255,.80); --surface-solid:#ffffff; --surface-2:#f1f5f9;
+  --border:rgba(15,23,42,.10); --border-strong:rgba(15,23,42,.18);
+  --text:#0f172a; --muted:#64748b;
+  --accent:#15803d; --on-accent:#ffffff; --accent-soft:#dcfce7;
+  --ok:#15803d; --ok-soft:#dcfce7; --warn:#b45309; --warn-soft:#fef3c7; --danger:#dc2626; --danger-soft:#fee2e2;
+  --info:#2563eb; --info-soft:#dbeafe;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 10px 28px -14px rgba(15,23,42,.18);
+  --ring:0 0 0 3px rgba(21,128,61,.35);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --grid:#e2e8f0;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0f141c; --surface:#171e29; --surface-2:#1e2633; --border:#2b3545;
-    --text:#e6ebf2; --muted:#93a0b4; --accent:#6c9bff; --accent-soft:#1d2a47;
-    --ok:#4ade80; --ok-soft:#163323; --warn:#fbbf24; --warn-soft:#3a2c10;
-    --shadow:none;
-    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --grid:#2c2c2a;
+    --bg:#0f172a; --glow-1:rgba(34,197,94,.10); --glow-2:rgba(59,130,246,.12);
+    --surface:rgba(27,35,54,.72); --surface-solid:#1b2336; --surface-2:#272f42;
+    --border:rgba(148,163,184,.16); --border-strong:rgba(148,163,184,.30);
+    --text:#f8fafc; --muted:#94a3b8;
+    --accent:#22c55e; --on-accent:#0f172a; --accent-soft:rgba(34,197,94,.14);
+    --ok:#22c55e; --ok-soft:rgba(34,197,94,.14); --warn:#f59e0b; --warn-soft:rgba(245,158,11,.15); --danger:#ef4444; --danger-soft:rgba(239,68,68,.15);
+    --info:#60a5fa; --info-soft:rgba(96,165,250,.15);
+    --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 12px 32px -16px rgba(0,0,0,.6);
+    --ring:0 0 0 3px rgba(34,197,94,.40);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --grid:rgba(148,163,184,.14);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0f141c; --surface:#171e29; --surface-2:#1e2633; --border:#2b3545;
-  --text:#e6ebf2; --muted:#93a0b4; --accent:#6c9bff; --accent-soft:#1d2a47;
-  --ok:#4ade80; --ok-soft:#163323; --warn:#fbbf24; --warn-soft:#3a2c10;
-  --shadow:none;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --grid:#2c2c2a;
+  --bg:#0f172a; --glow-1:rgba(34,197,94,.10); --glow-2:rgba(59,130,246,.12);
+  --surface:rgba(27,35,54,.72); --surface-solid:#1b2336; --surface-2:#272f42;
+  --border:rgba(148,163,184,.16); --border-strong:rgba(148,163,184,.30);
+  --text:#f8fafc; --muted:#94a3b8;
+  --accent:#22c55e; --on-accent:#0f172a; --accent-soft:rgba(34,197,94,.14);
+  --ok:#22c55e; --ok-soft:rgba(34,197,94,.14); --warn:#f59e0b; --warn-soft:rgba(245,158,11,.15); --danger:#ef4444; --danger-soft:rgba(239,68,68,.15);
+  --info:#60a5fa; --info-soft:rgba(96,165,250,.15);
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 12px 32px -16px rgba(0,0,0,.6);
+  --ring:0 0 0 3px rgba(34,197,94,.40);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --grid:rgba(148,163,184,.14);
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;font-size:15px;line-height:1.5}
-.wrap{max-width:1200px;margin:0 auto;padding:24px 16px 48px}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px}
-h1{font-size:22px;margin:0;font-weight:700}
+body{margin:0;color:var(--text);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;font-size:15px;line-height:1.55;
+  background:var(--bg);
+  background-image:radial-gradient(900px 520px at 0% -10%,var(--glow-1),transparent 70%),radial-gradient(900px 520px at 100% 0%,var(--glow-2),transparent 70%);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#0ea5e9);color:#fff;box-shadow:0 6px 18px -6px rgba(34,197,94,.55);flex:none}
+.brand-mark svg{width:22px;height:22px}
+h1{font-size:21px;margin:0;font-weight:700;letter-spacing:-.01em}
 .sub{color:var(--muted);font-size:13px}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
-button,.btn{font:inherit;font-size:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:7px 12px;cursor:pointer}
-button:hover,.btn:hover{border-color:var(--accent)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
-.kpi .label{color:var(--muted);font-size:13px}
-.kpi .value{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.ic{width:16px;height:16px;flex:none;vertical-align:-3px}
+button,.btn{font:inherit;font-size:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:7px 12px;cursor:pointer;
+  transition:background-color .18s,border-color .18s,color .18s,box-shadow .18s,transform .12s}
+button:hover,.btn:hover{border-color:var(--border-strong);background:var(--surface-2)}
+button:active,.btn:active{transform:translateY(1px)}
+button:focus-visible,.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:none;box-shadow:var(--ring)}
+button:disabled{opacity:.6;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.primary:hover{filter:brightness(1.07);background:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media (max-width:1080px){.kpis{grid-template-columns:repeat(6,minmax(0,1fr))}.kpis>.kpi{grid-column:span 2}.kpis>.kpi:nth-child(n+4){grid-column:span 3}}
+.card{background:var(--surface);-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);animation:rise .35s ease-out both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+/* KPI */
+.kpi{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--kc,var(--accent));opacity:.85}
+.kpi .k-ic{grid-row:span 2;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--kc-soft,var(--accent-soft));color:var(--kc,var(--accent))}
+.kpi .k-ic svg{width:22px;height:22px}
+.kpi .label{color:var(--muted);font-size:13px;line-height:1.3}
+.kpi .value{font-family:var(--font-mono);font-size:26px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi.k-blue{--kc:var(--info);--kc-soft:var(--info-soft)}
+.kpi.k-green{--kc:var(--ok);--kc-soft:var(--ok-soft)}
+.kpi.k-amber{--kc:var(--warn);--kc-soft:var(--warn-soft)}
+.kpi.k-violet{--kc:#8b5cf6;--kc-soft:rgba(139,92,246,.15)}
+.kpi.k-slate{--kc:var(--muted);--kc-soft:var(--surface-2)}
 .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:16px}
 @media (max-width:820px){.grid2{grid-template-columns:1fr}}
-h2{font-size:16px;margin:0 0 12px;font-weight:600}
+h2{font-size:16px;margin:0 0 12px;font-weight:700;letter-spacing:-.005em}
 .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:12px}
 .filters label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4px}
-input,select{font:inherit;font-size:14px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;min-width:0}
-.table-wrap{overflow-x:auto}
+input,select{font:inherit;font-size:14px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:7px 11px;min-width:0;transition:border-color .18s,box-shadow .18s}
+input:hover,select:hover{border-color:var(--border-strong)}
+.table-wrap{overflow-x:auto;border-radius:12px}
 table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
-th{color:var(--muted);font-weight:500;font-size:13px;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--surface)}
-td.num{font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.02em;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--surface-solid);z-index:1}
+th[data-k]:hover{color:var(--text)}
+td.num{font-family:var(--font-mono);font-size:13.5px;font-variant-numeric:tabular-nums}
+tbody tr{transition:background-color .15s}
 tbody tr:hover{background:var(--surface-2)}
-.plate{font-weight:600}
-.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:500}
+.plate{font-weight:700;letter-spacing:.01em}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600}
 .pill.out{background:var(--ok-soft);color:var(--ok)}
 .pill.in{background:var(--warn-soft);color:var(--warn)}
 .bars{display:flex;flex-direction:column;gap:8px}
@@ -85,7 +130,7 @@ tbody tr:hover{background:var(--surface-2)}
 .chart{position:relative}
 .chart svg{display:block;width:100%;overflow:visible}
 .chart text{fill:var(--muted);font-size:11px;font-family:inherit}
-.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.12);white-space:nowrap;display:none;z-index:5}
+.tip{position:absolute;pointer-events:none;background:var(--surface-solid);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.12);white-space:nowrap;display:none;z-index:5}
 .tip b{display:block;margin-bottom:2px}
 .cat-row{margin-bottom:12px}
 .cat-row .top{display:flex;justify-content:space-between;font-size:14px;font-weight:500;margin-bottom:4px}
@@ -112,7 +157,8 @@ tbody tr:hover{background:var(--surface-2)}
 .conn-status.live .dot{background:var(--ok);animation:pulse 1.6s infinite}
 .conn-status.live{color:var(--ok)}
 .conn-status.err .dot{background:#d03b3b}
-.conn-status.err{color:#d03b3b}
+.conn-status.err{color:var(--danger)}
+.conn-status.stale{color:var(--warn)} .conn-status.stale .dot{background:var(--warn)}
 .conn-status.loading .dot{background:var(--warn)}
 @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
 body.live .local-only{display:none}
@@ -126,7 +172,7 @@ table.resp td.plate .warn-ic{align-self:center}
 .edit-btn{display:inline-flex;align-items:center;gap:4px;font-size:13px;padding:4px 10px}
 .edit-btn svg{width:14px;height:14px}
 .tag-edit{display:inline-block;margin-left:6px;font-size:11px;font-weight:500;padding:1px 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent);vertical-align:2px}
-dialog.modal{border:1px solid var(--border);border-radius:14px;padding:0;background:var(--surface);color:var(--text);width:min(420px,calc(100% - 24px));box-shadow:0 20px 50px rgba(0,0,0,.3)}
+dialog.modal{border:1px solid var(--border);border-radius:16px;padding:0;background:var(--surface-solid);color:var(--text);width:min(420px,calc(100% - 24px));box-shadow:0 20px 50px rgba(0,0,0,.3)}
 dialog.modal::backdrop{background:rgba(10,14,22,.5)}
 .modal form{padding:20px;display:flex;flex-direction:column;gap:14px}
 .modal h3{margin:0;font-size:18px}
@@ -158,18 +204,27 @@ body.admin .public-only{display:none !important}
 .admin-tabs{display:flex;gap:4px;padding:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;overflow-x:auto;scrollbar-width:none}
 .admin-tabs button{flex:1;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:14px;padding:9px 12px;border-radius:9px;white-space:nowrap;cursor:pointer}
 .admin-tabs button:hover{color:var(--text)}
-.admin-tabs button.active{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.admin-tabs button.active{background:var(--surface-solid);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .admin-panel .admin-sec[data-atab]:not(.atab-on){display:none}
 .admin-panel .admin-sec.atab-first{border-top:none;padding-top:0}
+/* แท็บตารางข้อมูลใน Dashboard */
+.data-tabs{margin-bottom:12px;position:sticky;top:76px;z-index:15;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);background:var(--surface);box-shadow:var(--shadow)}
+.data-tabs button{display:flex;align-items:center;justify-content:center;gap:8px}
+.dt-count{font-family:var(--font-mono);font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.dt-count:empty{display:none}
+.data-tabs button.active .dt-count{background:var(--accent-soft);color:var(--accent)}
+section[data-dtab]:not(.dtab-on){display:none !important}
 /* เมนู 3 แท็บ */
 [hidden]{display:none !important}
-.tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
-.tabs a{display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px 10px 0 0;color:var(--muted);text-decoration:none;font-weight:600;font-size:15px;white-space:nowrap;border:1px solid transparent;border-bottom:none;margin-bottom:-1px}
+.tabs{display:flex;gap:4px;margin-bottom:18px;padding:5px;background:var(--surface);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--border);border-radius:14px;overflow-x:auto;scrollbar-width:none;box-shadow:var(--shadow);position:sticky;top:8px;z-index:20}
+.tabs a{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 16px;border-radius:10px;color:var(--muted);text-decoration:none;font-weight:600;font-size:15px;white-space:nowrap;flex:1;transition:background-color .18s,color .18s}
+.tabs a svg{width:18px;height:18px;flex:none}
 .tabs a:hover{color:var(--text);background:var(--surface-2)}
-.tabs a.active{color:var(--accent);background:var(--surface);border-color:var(--border);border-bottom:1px solid var(--surface)}
+.tabs a.active{color:var(--on-accent);background:var(--accent);box-shadow:0 6px 16px -8px var(--accent)}
 body:not(.has-dash) .dash-only{display:none !important}
 .login-card{max-width:400px;margin:24px auto;text-align:center;padding:28px 24px}
-.login-card .login-ic{font-size:36px;line-height:1;margin-bottom:6px}
+.login-card .login-ic{width:56px;height:56px;margin:0 auto 12px;border-radius:16px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.login-card .login-ic svg{width:28px;height:28px}
 .login-card h2{margin:0 0 4px;font-size:20px}
 .login-card form{display:flex;flex-direction:column;gap:12px;margin-top:18px;text-align:left}
 .login-card label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
@@ -260,7 +315,7 @@ dialog.modal.wide{width:min(720px,calc(100% - 24px));max-height:calc(100dvh - 24
 .reg-item .b .del{color:#d03b3b}
 /* กล่องแจ้งเตือนขวาล่าง */
 .toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:100;max-width:360px;width:calc(100% - 32px);pointer-events:none}
-.toast{pointer-events:auto;display:grid;grid-template-columns:28px 1fr 24px;gap:10px;align-items:start;background:var(--surface);color:var(--text);border:1px solid var(--border);border-left:4px solid var(--warn);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);cursor:pointer;animation:toastIn .25s ease-out}
+.toast{pointer-events:auto;display:grid;grid-template-columns:28px 1fr 24px;gap:10px;align-items:start;background:var(--surface-solid);color:var(--text);border:1px solid var(--border);border-left:4px solid var(--warn);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);cursor:pointer;animation:toastIn .25s ease-out}
 .toast.out{animation:toastOut .25s ease-in forwards}
 .toast .t-ic{width:28px;height:28px;border-radius:50%;background:var(--warn-soft);color:var(--warn);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
 .toast .t-title{font-weight:600;font-size:14px}
@@ -288,6 +343,9 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
   .user-form{grid-template-columns:1fr}
   .user-form button{min-height:44px}
   .tabs a{padding:10px 12px;font-size:14px;flex:1;justify-content:center}
+  .data-tabs .dt-l,.data-tabs .ic{display:none}
+  .data-tabs button{padding:9px 6px;gap:5px;font-size:13.5px}
+  .data-tabs{top:70px}
   .guard-status{font-size:22px}
   .guard-btns button{min-height:88px;font-size:21px}
   .g-item{grid-template-columns:1fr auto}
@@ -309,6 +367,13 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
   .conn-row input{grid-column:1/-1}
   .conn-row button{min-height:44px}
   .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .kpis>.kpi,.kpis>.kpi:nth-child(n+4){grid-column:auto}
+  .kpis>.kpi:last-child{grid-column:1/-1}
+  .kpi{grid-template-columns:1fr;gap:6px}
+  .kpi .k-ic{grid-row:auto;width:34px;height:34px;border-radius:10px}
+  .kpi .k-ic svg{width:18px;height:18px}
+  .kpi .value{font-size:22px}
+  .brand-mark{width:36px;height:36px}
   .card{padding:14px;border-radius:10px}
   .kpi .value{font-size:22px}
   .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -321,8 +386,8 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
   /* ตารางเปลี่ยนเป็นการ์ด */
   table.resp thead{display:none}
   table.resp,table.resp tbody,table.resp tr,table.resp td{display:block;width:100%}
-  table.resp tr{display:grid;grid-template-columns:1fr 1fr;column-gap:12px;row-gap:6px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--surface)}
-  table.resp tbody tr:hover{background:var(--surface)}
+  table.resp tr{display:grid;grid-template-columns:1fr 1fr;column-gap:12px;row-gap:6px;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:var(--surface-2)}
+  table.resp tbody tr:hover{background:var(--surface-2)}
   table.resp td{display:flex;flex-direction:column;border:none;padding:0;white-space:normal;width:auto}
   table.resp td::before{content:attr(data-label);color:var(--muted);font-size:12px;line-height:1.3}
   table.resp td.empty{grid-column:1/-1;text-align:center}
@@ -335,11 +400,34 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
 </style>
 </head>
 <body>
+<!-- ชุดไอคอน SVG (แทนอีโมจิ ตามแนวทาง UI/UX Pro Max) — เรียกใช้ด้วย <svg class="ic"><use href="#i-..."/></svg> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></symbol>
+    <symbol id="i-gate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7M7 14v7M17 3v3M7 3v3M10 14 2.3 6.3M14 6l7.7 7.7M8 6l8 8"/></symbol>
+    <symbol id="i-dash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-login" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></symbol>
+    <symbol id="i-plate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h5M6 14h8M15 10h3"/></symbol>
+    <symbol id="i-parking" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-badge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></symbol>
+    <symbol id="i-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h13M12 7l5 5-5 5M21 5v14"/></symbol>
+  </defs>
+</svg>
 <div class="wrap">
   <header>
-    <div>
-      <h1>ระบบป้ายทะเบียน</h1>
-      <div class="sub" id="subtitle">ข้อมูลรถเข้า–ออก</div>
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><svg><use href="#i-car"/></svg></div>
+      <div>
+        <h1>ระบบป้ายทะเบียน</h1>
+        <div class="sub" id="subtitle">ข้อมูลรถเข้า–ออก</div>
+      </div>
     </div>
     <div class="actions">
       <button id="themeBtn" class="theme-btn" aria-label="สลับโทนมืด/สว่าง" title="สลับโทนมืด/สว่าง"></button>
@@ -348,14 +436,14 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
   </header>
 
   <nav class="tabs" id="tabs" aria-label="เมนู">
-    <a href="#gate" data-view="gate"><span aria-hidden="true">🚧</span> ไม้กั้น</a>
-    <a href="#dashboard" data-view="dashboard"><span aria-hidden="true">📊</span> Dashboard</a>
-    <a href="#admin" data-view="admin"><span aria-hidden="true">⚙️</span> แอดมิน</a>
+    <a href="#gate" data-view="gate"><svg aria-hidden="true"><use href="#i-gate"/></svg>ไม้กั้น</a>
+    <a href="#dashboard" data-view="dashboard"><svg aria-hidden="true"><use href="#i-dash"/></svg>Dashboard</a>
+    <a href="#admin" data-view="admin"><svg aria-hidden="true"><use href="#i-gear"/></svg>แอดมิน</a>
   </nav>
 
   <!-- หน้าเข้าสู่ระบบ (ใช้ร่วมทั้ง 3 แท็บ) -->
   <section class="card login-card" id="loginView" hidden>
-    <div class="login-ic" id="loginIc">🔒</div>
+    <div class="login-ic" id="loginIc" aria-hidden="true"><svg><use href="#i-lock"/></svg></div>
     <h2 id="loginTitle">เข้าสู่ระบบ</h2>
     <div class="chart-sub" id="loginSub"></div>
     <form id="viewLoginForm" autocomplete="on">
@@ -402,10 +490,10 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
       </div>
     </div>
     <nav class="admin-tabs" id="adminTabs" aria-label="เมนูแอดมิน">
-      <button type="button" data-atab="gate">🚧 ไม้กั้น</button>
-      <button type="button" data-atab="users">👥 บัญชีบุคลากร</button>
-      <button type="button" data-atab="conn">🔗 การเชื่อมต่อ</button>
-      <button type="button" data-atab="data">🗂️ จัดการข้อมูล</button>
+      <button type="button" data-atab="gate"><svg class="ic" aria-hidden="true"><use href="#i-gate"/></svg> ไม้กั้น</button>
+      <button type="button" data-atab="users"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg> บัญชีบุคลากร</button>
+      <button type="button" data-atab="conn"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg> การเชื่อมต่อ</button>
+      <button type="button" data-atab="data"><svg class="ic" aria-hidden="true"><use href="#i-db"/></svg> จัดการข้อมูล</button>
     </nav>
     <div class="admin-sec" data-atab="gate" style="order:1">
       <h3>รหัสผ่านหน้าไม้กั้น (สำหรับยาม)</h3>
@@ -489,11 +577,11 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
   <div class="drop local-only admin-only" id="drop">ลากไฟล์ CSV / Excel มาวางที่นี่ — คอลัมน์: Plate_Number, Province, Status, Entry_Date, Entry_Time, Exit_Date, Exit_Time, Duration, Entry_Event_ID, Exit_Event_ID, Entry_Epoch</div>
 
   <section class="kpis">
-    <div class="card kpi"><div class="label">จำนวนครั้งที่เข้า</div><div class="value" id="kTotal">0</div></div>
-    <div class="card kpi"><div class="label">ป้ายทะเบียน (ไม่ซ้ำ)</div><div class="value" id="kPlates">0</div></div>
-    <div class="card kpi"><div class="label">ยังอยู่ภายใน</div><div class="value" id="kInside">0</div></div>
-    <div class="card kpi"><div class="label">ระยะเวลาเฉลี่ย</div><div class="value" id="kAvg">–</div></div>
-    <div class="card kpi"><div class="label">บุคลากร / ภายนอก (ครั้ง)</div><div class="value" id="kStaff">–</div></div>
+    <div class="card kpi k-blue"><div class="k-ic" aria-hidden="true"><svg><use href="#i-in"/></svg></div><div class="label">จำนวนครั้งที่เข้า</div><div class="value" id="kTotal">0</div></div>
+    <div class="card kpi k-violet"><div class="k-ic" aria-hidden="true"><svg><use href="#i-plate"/></svg></div><div class="label">ป้ายทะเบียน (ไม่ซ้ำ)</div><div class="value" id="kPlates">0</div></div>
+    <div class="card kpi k-amber"><div class="k-ic" aria-hidden="true"><svg><use href="#i-parking"/></svg></div><div class="label">จอดอยู่ตอนนี้</div><div class="value" id="kInside">0</div></div>
+    <div class="card kpi k-slate"><div class="k-ic" aria-hidden="true"><svg><use href="#i-clock"/></svg></div><div class="label">จอดเฉลี่ย</div><div class="value" id="kAvg">–</div></div>
+    <div class="card kpi k-green"><div class="k-ic" aria-hidden="true"><svg><use href="#i-badge"/></svg></div><div class="label">บุคลากร / ภายนอก (ครั้ง)</div><div class="value" id="kStaff">–</div></div>
   </section>
 
   <section class="grid3">
@@ -522,7 +610,14 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
     </div>
   </section>
 
-  <section class="card" style="margin-bottom:16px">
+  <!-- แท็บตารางข้อมูล: กดหัวข้อไหน แสดงเฉพาะตารางนั้น ไม่ต้องเลื่อนลงไปหา -->
+  <nav class="admin-tabs data-tabs" id="dataTabs" aria-label="ตารางข้อมูล">
+    <button type="button" data-dtab="list"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span><span class="dt-l">รายการ</span>เข้า–ออก</span><span class="dt-count" id="dtc-list"></span></button>
+    <button type="button" data-dtab="gate"><svg class="ic" aria-hidden="true"><use href="#i-gate"/></svg><span><span class="dt-l">ประวัติ</span>ไม้กั้น</span><span class="dt-count" id="dtc-gate"></span></button>
+    <button type="button" data-dtab="summary"><svg class="ic" aria-hidden="true"><use href="#i-plate"/></svg><span>สรุป<span class="dt-l">ตาม</span>ป้าย<span class="dt-l">ทะเบียน</span></span><span class="dt-count" id="dtc-summary"></span></button>
+  </nav>
+
+  <section class="card" style="margin-bottom:16px" data-dtab="list">
     <h2>รายการเข้า–ออก</h2>
     <div class="filters">
       <label>ค้นหาป้าย / ชื่อเจ้าของ<input id="fPlate" placeholder="เช่น กล7153 หรือ ชื่อ"></label>
@@ -553,7 +648,7 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
     <div class="foot" id="count"></div>
   </section>
 
-  <section class="card" style="margin-bottom:16px">
+  <section class="card" style="margin-bottom:16px" data-dtab="gate">
     <div class="chart-head">
       <div><h2>ประวัติการเปิด–ปิดไม้กั้น</h2><div class="chart-sub">จากแท็บ GateLog ใน Google Sheet</div></div>
       <div class="gate-today" id="gateToday"></div>
@@ -609,7 +704,7 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
     </div>
   </dialog>
 
-  <section class="card">
+  <section class="card" data-dtab="summary">
     <h2>สรุปตามป้ายทะเบียน</h2>
     <div class="table-wrap">
       <table class="resp">
@@ -693,15 +788,15 @@ const viewerSess=()=>getSess('viewer'), gateSess=()=>getSess('gate');
 // ---------- เมนู 3 แท็บ ----------
 let currentView='';
 const VIEWS={
-  gate:{ic:'🚧',title:'หน้าเปิด–ปิดไม้กั้น',sub:'สำหรับเจ้าหน้าที่ — ใส่รหัสผ่านหน้าไม้กั้นที่ได้รับจากแอดมิน',user:false,role:'gate'},
-  dashboard:{ic:'📊',title:'Dashboard',sub:'สำหรับบุคลากร — เข้าสู่ระบบด้วยบัญชีที่แอดมินสร้างให้',user:true,role:'viewer'},
-  admin:{ic:'⚙️',title:'หน้าแอดมิน',sub:'สำหรับผู้ดูแลระบบ',user:true,role:'admin'},
+  gate:{ic:'i-gate',title:'หน้าเปิด–ปิดไม้กั้น',sub:'สำหรับเจ้าหน้าที่ ใส่รหัสผ่านที่ได้จากแอดมิน',user:false,role:'gate'},
+  dashboard:{ic:'i-dash',title:'Dashboard',sub:'สำหรับบุคลากร ใช้บัญชีที่แอดมินสร้างให้',user:true,role:'viewer'},
+  admin:{ic:'i-gear',title:'หน้าแอดมิน',sub:'สำหรับผู้ดูแลระบบ',user:true,role:'admin'},
 };
 function viewAuthed(v){ if(isAdmin()) return true; return v==='gate' ? !!gateSess() : v==='dashboard' ? !!viewerSess() : false; }
 function canViewDash(){ return (currentView==='dashboard'||currentView==='admin') && viewAuthed(currentView); }
 function showLogin(v,msgCls,msg){
   const c=VIEWS[v];
-  $('loginIc').textContent=c.ic; $('loginTitle').textContent=c.title; $('loginSub').textContent=c.sub;
+  $('loginIc').innerHTML=`<svg><use href="#${c.ic}"/></svg>`; $('loginTitle').textContent=c.title; $('loginSub').textContent=c.sub;
   $('vlUserRow').hidden=!c.user; $('vlUser').required=c.user;
   $('vlMsg').className='m-msg '+(msgCls||''); $('vlMsg').textContent=msg||'';
   $('vlSubmit').disabled=false;
@@ -949,10 +1044,12 @@ function render(){
     <td class="num" data-label="ระยะเวลา">${fmtDur(r.durSec)}</td>
     <td class="act admin-only"><button class="edit-btn" data-key="${esc(rowKey(r))}" title="แก้ไขป้ายทะเบียน">${ICON_EDIT}แก้ไข</button></td></tr>`).join('') : '<tr><td colspan="10" class="empty">ไม่พบข้อมูล — นำเข้าไฟล์หรือกด “โหลดข้อมูลตัวอย่าง”</td></tr>';
   $('count').textContent=`แสดง ${rows.length} จาก ${data.length} รายการ`;
+  setDtCount('dtc-list', rows.length);
 
   // summary
   const g={}; rows.forEach(r=>{ const o=g[r.plate]||(g[r.plate]={plate:r.plate,province:r.province,owner:'',n:0,sec:0,first:Infinity,last:-Infinity}); o.n++; if(!o.owner) o.owner=ownerOf(r); if(!o.position) o.position=r.position||''; o.sec+=r.durSec||0; if(r.entryTs!=null){o.first=Math.min(o.first,r.entryTs);o.last=Math.max(o.last,r.entryTs);} });
   const sm=Object.values(g).sort((a,b)=>b.n-a.n);
+  setDtCount('dtc-summary', sm.length);
   $('summary').innerHTML = sm.length ? sm.map(o=>`<tr${unk(o.province)?' class="row-warn"':''}><td class="plate" data-label="ป้ายทะเบียน">${plateCell(o)}</td><td data-label="เจ้าของ">${ownerCell(o)}</td><td data-label="จังหวัด">${provCell(o.province)}</td><td class="num" data-label="จำนวนครั้ง">${o.n}</td><td class="num" data-label="เวลารวม">${fmtDur(o.sec)}</td>
     <td class="num" data-label="เข้าครั้งแรก">${isFinite(o.first)?fmtDate(o.first)+' '+fmtTime(o.first):'–'}</td><td class="num" data-label="เข้าล่าสุด">${isFinite(o.last)?fmtDate(o.last)+' '+fmtTime(o.last):'–'}</td></tr>`).join('') : '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
 }
@@ -1095,6 +1192,13 @@ function fetchSheetRows(url, sheetName){
 }
 function setStatus(cls, html){ const s=$('connStatus'); s.className='conn-status '+cls; s.innerHTML='<span class="dot"></span>'+html; }
 
+// ข้อมูลค้าง: ถ้าดึงสำเร็จครั้งล่าสุดนานเกิน 3 รอบอัปเดต ให้เปลี่ยนป้าย Live เป็นสีเหลือง (ไม่อ้างว่า Live ถ้าข้อมูลไม่สด)
+setInterval(()=>{
+  if(!live.url || !live.lastOk || !canViewDash() || live.busy) return;
+  const sec=(+$('interval').value||10), age=(Date.now()-live.lastOk.getTime())/1000;
+  if(age>sec*3 && $('connStatus').classList.contains('live'))
+    setStatus('stale', `ข้อมูลอาจไม่เป็นปัจจุบัน · อัปเดตล่าสุด ${fmtTime(live.lastOk.getTime())} (${Math.round(age)} วินาทีที่แล้ว)`);
+},5000);
 // ดึงข้อมูล Dashboard ผ่าน Apps Script (ต้องเข้าสู่ระบบ) — บุคลากรใช้ token, แอดมินใช้บัญชีแอดมิน
 async function fetchDashData(){
   const v=viewerSess();
@@ -1329,6 +1433,7 @@ function renderGateLog(list){
       <td data-label="ป้ายทะเบียน">${x.plate?`<b>${esc(x.plate)}</b>${reg?regBadge(reg):OUTSIDE_BADGE}`:'<span style="color:var(--muted)">–</span>'}</td></tr>`;
   }).join('') : '<tr><td colspan="5" class="empty">ยังไม่มีการเปิด–ปิดไม้กั้น</td></tr>';
   $('gateLogFoot').textContent=`แสดง ${rows.length} จาก ${list.length} รายการล่าสุด`;
+  setDtCount('dtc-gate', list.length);
 }
 
 // ---------- ไม้กั้น ----------
@@ -1362,6 +1467,19 @@ async function sendGate(cmd){
 }
 $('gateOpen').onclick=()=>sendGate('open');
 $('gateClose').onclick=()=>sendGate('close');
+
+// ---------- แท็บตารางข้อมูลใน Dashboard (กดหัวข้อไหน แสดงตารางนั้น) ----------
+function showDataTab(t, scroll){
+  const tabs=[...document.querySelectorAll('#dataTabs button')];
+  if(!tabs.some(b=>b.dataset.dtab===t)) t='list';
+  tabs.forEach(b=>{ const on=b.dataset.dtab===t; b.classList.toggle('active',on); b.setAttribute('aria-selected',on); });
+  document.querySelectorAll('section[data-dtab]').forEach(s=>s.classList.toggle('dtab-on',s.dataset.dtab===t));
+  try{ localStorage.setItem('plate-dashboard-datatab',t); }catch(e){}
+  if(scroll){ const nav=$('dataTabs'), y=nav.getBoundingClientRect().top+scrollY-80; if(scrollY>y) window.scrollTo({top:y,behavior:'smooth'}); }
+}
+$('dataTabs').addEventListener('click',e=>{ const b=e.target.closest('button[data-dtab]'); if(b) showDataTab(b.dataset.dtab,true); });
+(()=>{ let t='list'; try{ t=localStorage.getItem('plate-dashboard-datatab')||t; }catch(e){} showDataTab(t); })();
+function setDtCount(id,n){ const el=$(id); if(el) el.textContent=n!=null?Number(n).toLocaleString('th-TH'):''; }
 
 // ---------- แท็บย่อยในหน้าแอดมิน (เปิดทีละหมวด จำหมวดล่าสุดไว้) ----------
 function showAdminTab(t){
@@ -1486,7 +1604,7 @@ function renderUsers(out){
     : '<b style="color:var(--warn)">⚠ ยังไม่ได้ตั้งรหัส</b> — ยามจะเข้าหน้าไม้กั้นไม่ได้จนกว่าจะตั้ง';
   const users=out.users||[];
   $('userList').innerHTML = users.length ? users.map(u=>`<div class="u-item">
-      <div><div class="u-name">👤 ${esc(u.username)}</div><div class="u-sub">สร้าง ${esc(u.created||'–')}${u.updated?' · เปลี่ยนรหัส '+esc(u.updated):''}</div></div>
+      <div><div class="u-name"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg> ${esc(u.username)}</div><div class="u-sub">สร้าง ${esc(u.created||'–')}${u.updated?' · เปลี่ยนรหัส '+esc(u.updated):''}</div></div>
       <div class="b"><button type="button" data-act="reset" data-u="${esc(u.username)}">ตั้งรหัสใหม่</button><button type="button" class="del" data-act="del" data-u="${esc(u.username)}">ลบ</button></div>
     </div>`).join('') : '<div class="empty">ยังไม่มีบัญชีบุคลากร — เพิ่มบัญชีแรกด้านบน</div>';
 }
@@ -1719,7 +1837,7 @@ function updateThemeUI(){
   const dark=currentTheme()==='dark';
   // ปุ่มแสดงโหมดที่จะเปลี่ยนไป
   $('themeBtn').innerHTML = dark ? ICON_SUN+'<span>โทนสว่าง</span>' : ICON_MOON+'<span>โทนมืด</span>';
-  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ m.removeAttribute('media'); m.content = dark?'#0f141c':'#f4f6f9'; });
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ m.removeAttribute('media'); m.content = dark?'#0f172a':'#eef2f7'; });
 }
 $('themeBtn').onclick=()=>{
   const next=currentTheme()==='dark'?'light':'dark';
