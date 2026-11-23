@@ -205,7 +205,7 @@ body:not(.has-dash) .dash-only{display:none !important}
 .reg-yes{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--ok-soft);color:var(--ok)}
 .reg-no{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
 /* จัดการบัญชี */
-.user-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px}
+.user-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}
 .user-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .u-item{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:8px 12px;flex-wrap:wrap}
 .u-item .u-name{font-weight:600}
@@ -418,7 +418,6 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
     <div class="admin-sec" data-atab="users">
       <h3>บัญชีบุคลากร (เข้าดูหน้า Dashboard)</h3>
       <form class="user-form" id="userForm" autocomplete="off">
-        <input id="uName" placeholder="ชื่อ-นามสกุล" maxlength="60">
         <input id="uUser" placeholder="username (อังกฤษ/ตัวเลข)" maxlength="30" autocapitalize="off">
         <input id="uPass" type="password" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)" autocomplete="new-password">
         <button type="submit" class="btn primary" id="uAdd">＋ เพิ่มบัญชี</button>
@@ -1487,7 +1486,7 @@ function renderUsers(out){
     : '<b style="color:var(--warn)">⚠ ยังไม่ได้ตั้งรหัส</b> — ยามจะเข้าหน้าไม้กั้นไม่ได้จนกว่าจะตั้ง';
   const users=out.users||[];
   $('userList').innerHTML = users.length ? users.map(u=>`<div class="u-item">
-      <div><div class="u-name">${esc(u.name||u.username)}</div><div class="u-sub">username: <b>${esc(u.username)}</b> · สร้าง ${esc(u.created||'–')}${u.updated?' · เปลี่ยนรหัส '+esc(u.updated):''}</div></div>
+      <div><div class="u-name">👤 ${esc(u.username)}</div><div class="u-sub">สร้าง ${esc(u.created||'–')}${u.updated?' · เปลี่ยนรหัส '+esc(u.updated):''}</div></div>
       <div class="b"><button type="button" data-act="reset" data-u="${esc(u.username)}">ตั้งรหัสใหม่</button><button type="button" class="del" data-act="del" data-u="${esc(u.username)}">ลบ</button></div>
     </div>`).join('') : '<div class="empty">ยังไม่มีบัญชีบุคลากร — เพิ่มบัญชีแรกด้านบน</div>';
 }
@@ -1507,7 +1506,7 @@ $('gatePwSave').onclick=async()=>{
 };
 $('userForm').addEventListener('submit',async e=>{
   e.preventDefault();
-  const name=$('uName').value.trim(), username=$('uUser').value.trim(), password=$('uPass').value;
+  const name='', username=$('uUser').value.trim(), password=$('uPass').value;
   if(!username||!password){ $('userMsg').textContent='กรอก username และรหัสผ่าน'; return; }
   $('uAdd').disabled=true; $('userMsg').textContent='กำลังเพิ่ม…';
   try{ renderUsers(await callScript({action:'addUser',name,username,password})); $('userForm').reset(); $('userMsg').textContent=`✓ เพิ่มบัญชี ${username.toLowerCase()} แล้ว — แจ้ง username และรหัสผ่านให้เจ้าของบัญชี`; }
