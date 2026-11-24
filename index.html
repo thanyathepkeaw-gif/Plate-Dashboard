@@ -207,6 +207,22 @@ body.admin .public-only{display:none !important}
 .admin-tabs button.active{background:var(--surface-solid);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .admin-panel .admin-sec[data-atab]:not(.atab-on){display:none}
 .admin-panel .admin-sec.atab-first{border-top:none;padding-top:0}
+/* นำเข้าหลายป้าย */
+.bulk{border:1px dashed var(--border-strong);border-radius:12px;padding:10px 12px}
+.bulk summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent)}
+.bulk-body{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.bulk textarea{font:inherit;font-size:14px;width:100%;resize:vertical;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;font-family:var(--font-mono),"IBM Plex Sans Thai",monospace}
+.bulk-row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.bulk-file{display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer}
+.bulk-file .btn{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.bulk-row label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);flex:1;min-width:160px}
+.bulk-row button{min-height:40px}
+.bulk-preview{font-size:13px}
+.bulk-preview table{font-size:13px}
+.bulk-preview td,.bulk-preview th{padding:6px 8px}
+.bulk-preview .bad{color:var(--danger)}
+.bulk-preview .upd{color:var(--warn)}
+.bulk-scroll{max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:10px;margin-top:6px}
 /* แท็บตารางข้อมูลใน Dashboard */
 .data-tabs{margin-bottom:12px;position:sticky;top:76px;z-index:15;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);background:var(--surface);box-shadow:var(--shadow)}
 .data-tabs button{display:flex;align-items:center;justify-content:center;gap:8px}
@@ -695,6 +711,24 @@ body,.card,.tip,input,select,button,.btn{transition:background-color .2s,color .
           <button type="submit" class="btn primary" id="regSubmit">＋ เพิ่มป้าย</button>
         </div>
       </form>
+      <details class="bulk" id="bulkBox">
+        <summary>นำเข้าหลายป้ายพร้อมกัน (ไฟล์ Excel หรือวางจากตาราง)</summary>
+        <div class="bulk-body">
+          <label class="bulk-file">
+            <input type="file" id="bulkFile" accept=".xlsx,.xls,.csv,.tsv,.txt" hidden>
+            <span class="btn"><svg class="ic" aria-hidden="true"><use href="#i-db"/></svg> เลือกไฟล์ Excel (.xlsx / .csv)</span>
+            <span class="s-hint" id="bulkFileName" style="margin:0">หรือคัดลอกตารางมาวางในช่องด้านล่าง</span>
+          </label>
+          <div class="s-hint">คัดลอกตารางมาวาง 1 แถวต่อ 1 ป้าย คอลัมน์: <b>ป้ายทะเบียน · จังหวัด · ประเภท · ชื่อ-นามสกุล · หมายเหตุ</b> (ไม่มีคอลัมน์ประเภทก็ได้ จะใช้ประเภทด้านล่างแทน) · แถวหัวตารางจะถูกข้ามให้เอง</div>
+          <textarea id="bulkText" rows="6" placeholder="กต149	น่าน	บุคลากร	นายรณกฤต แสนนิทา&#10;7กช1738	กรุงเทพมหานคร	บุคลากร	นางสาวภัทยา ธัญญะ"></textarea>
+          <div class="bulk-row">
+            <label>ประเภทเริ่มต้น<select id="bulkCat"></select></label>
+            <button type="button" id="bulkCheck">ตรวจข้อมูล</button>
+            <button type="button" class="btn primary" id="bulkImport" disabled>นำเข้า</button>
+          </div>
+          <div class="bulk-preview" id="bulkPreview"></div>
+        </div>
+      </details>
       <div class="m-msg" id="regMsg"></div>
       <div class="reg-tools">
         <input id="regSearch" placeholder="ค้นหาป้าย / ชื่อ">
@@ -1737,6 +1771,7 @@ function openRegistry(prefill){
   if(!isAdmin()) return openLogin();
   $('regProv').innerHTML='<option value="">ไม่ระบุ</option>'+PROVINCES.map(p=>`<option>${esc(p)}</option>`).join('');
   $('regCat').innerHTML=CATS.map(c=>`<option>${c.v}</option>`).join('');
+  if(!$('bulkCat').options.length){ $('bulkCat').innerHTML=CATS.map(c=>`<option>${c.v}</option>`).join(''); $('bulkCat').value='บุคลากร'; }
   resetRegForm();
   if(prefill){ $('regPlate').value=prefill.plate||''; if(prefill.province && !unk(prefill.province)) $('regProv').value=prefill.province; }
   renderRegSrc(); renderRegList(); setRegMsg('','');
@@ -1818,6 +1853,82 @@ $('regList').addEventListener('click',async e=>{
   }
 });
 $('regReset').onclick=()=>{ resetRegForm(); setRegMsg('',''); };
+
+// ---------- นำเข้าหลายป้ายพร้อมกัน ----------
+let bulkItems=[];
+function parseBulk(text, defCat){
+  const out=[], catNames=CATS.map(c=>c.v);
+  String(text||'').split(/\r?\n/).forEach((line,i)=>{
+    if(!line.trim()) return;
+    const c=(line.includes('\t')?line.split('\t'):line.split(',')).map(s=>s.trim().replace(/^"|"$/g,''));
+    if(i===0 && /ป้าย|plate/i.test(c[0]) && !/\d/.test(c[0])) return;      // แถวหัวตาราง
+    const it={line:i+1, plate:normPlate(c[0]), province:c[1]||'', category:defCat, name:'', note:''};
+    if(catNames.includes(c[2])){ it.category=c[2]; it.name=c[3]||''; it.note=c[4]||''; }
+    else { it.name=c[2]||''; it.note=c[3]||''; }
+    it.name=it.name.replace(/\s+/g,' ').trim(); it.note=it.note.replace(/\s+/g,' ').trim();   // เว้นวรรคซ้อนใน Excel
+    if(unk(it.province)) it.province='';
+    const probs=[];
+    if(!it.plate) probs.push('ไม่มีเลขป้าย');
+    else if(!/\d/.test(it.plate)) probs.push('เลขป้ายไม่มีตัวเลข');
+    if(it.province && !PROVINCES.includes(it.province)) probs.push('จังหวัดไม่อยู่ในรายชื่อ 77 จังหวัด');
+    it.problem=probs.join(', ');
+    out.push(it);
+  });
+  return out;
+}
+function renderBulkPreview(){
+  const ok=bulkItems.filter(x=>!x.problem), bad=bulkItems.filter(x=>x.problem);
+  const existing=new Set(registry.map(e=>normPlate(e.plate)));
+  const upd=ok.filter(x=>existing.has(x.plate)).length;
+  $('bulkImport').disabled=!ok.length;
+  $('bulkImport').textContent=ok.length?`นำเข้า ${ok.length} ป้าย`:'นำเข้า';
+  if(!bulkItems.length){ $('bulkPreview').innerHTML='<span class="bad">ไม่พบข้อมูล — วางรายชื่อในช่องด้านบนก่อน</span>'; return; }
+  $('bulkPreview').innerHTML=`พร้อมนำเข้า <b>${ok.length}</b> ป้าย${upd?` (<span class="upd">อัปเดตป้ายเดิม ${upd}</span>)`:''}${bad.length?` · <span class="bad">มีปัญหา ${bad.length} แถว (จะข้าม)</span>`:''}
+    <div class="bulk-scroll"><table><thead><tr><th>แถว</th><th>ป้าย</th><th>จังหวัด</th><th>ประเภท</th><th>ชื่อ</th><th></th></tr></thead><tbody>${
+      bulkItems.map(x=>`<tr><td class="num">${x.line}</td><td><b>${esc(x.plate||'–')}</b></td><td>${esc(x.province||'ไม่ระบุ')}</td><td>${esc(x.category)}</td><td>${esc(x.name||'–')}</td>
+        <td>${x.problem?`<span class="bad">✗ ${esc(x.problem)}</span>`:existing.has(x.plate)?'<span class="upd">อัปเดต</span>':'<span style="color:var(--ok)">ใหม่</span>'}</td></tr>`).join('')
+    }</tbody></table></div>`;
+}
+$('bulkCheck').onclick=()=>{ bulkItems=parseBulk($('bulkText').value,$('bulkCat').value); renderBulkPreview(); };
+// เลือกไฟล์ Excel/CSV → แปลงเป็นตาราง (คั่นด้วย Tab) ใส่ช่องข้อความ แล้วตรวจข้อมูลให้ทันที
+$('bulkFile').addEventListener('change',async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  $('bulkFileName').textContent='กำลังอ่าน '+f.name+' …';
+  try{
+    let text;
+    if(/\.(csv|tsv|txt)$/i.test(f.name)) text=await f.text();
+    else{
+      if(typeof XLSX==='undefined') throw new Error('อ่านไฟล์ Excel ไม่ได้ (ต้องต่ออินเทอร์เน็ต) — เปิดไฟล์ใน Excel แล้วคัดลอกตารางมาวางแทน');
+      const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:''});
+      text=rows.filter(r=>r.some(v=>String(v).trim())).map(r=>r.map(v=>String(v).replace(/[\t\r\n]+/g,' ')).join('\t')).join('\n');
+    }
+    $('bulkText').value=text;
+    bulkItems=parseBulk(text,$('bulkCat').value); renderBulkPreview();
+    $('bulkFileName').textContent=`✓ ${f.name} — อ่านได้ ${bulkItems.length} แถว ตรวจในตารางด้านล่างแล้วกดนำเข้า`;
+  }catch(err){ $('bulkFileName').textContent='✗ '+err.message; }
+});
+$('bulkText').addEventListener('input',()=>{ $('bulkImport').disabled=true; $('bulkPreview').textContent=''; });
+$('bulkImport').onclick=async()=>{
+  if(!isAdmin()) return openLogin();
+  const items=bulkItems.filter(x=>!x.problem).map(({plate,province,category,name,note})=>({plate,province,category,name,note}));
+  if(!items.length) return;
+  if(!confirm(`นำเข้า ${items.length} ป้ายเข้า "ป้ายที่ลงทะเบียน"?\n(ป้ายที่มีอยู่แล้วจะถูกอัปเดตเป็นข้อมูลใหม่)`)) return;
+  const b=$('bulkImport'); b.disabled=true; b.textContent='กำลังนำเข้า…';
+  try{
+    if(regUsesSheet()){
+      const out=await callScript({action:'addRegisteredBulk',items});
+      await loadRegistry(); live.lastText=null; pollSheet();
+      setRegMsg('',`✓ นำเข้าแล้ว: เพิ่มใหม่ ${out.added} · อัปเดต ${out.updated} ป้าย · เติมชื่อ/ตำแหน่งในชีต ${out.filled} แถว`);
+    }else{
+      const list=regLocalLoad().filter(e=>!items.some(x=>x.plate===normPlate(e.plate))).concat(items);
+      regLocalSave(list); setRegistry(list); afterRegChange();
+      setRegMsg('',`✓ นำเข้า ${items.length} ป้ายแล้ว (เก็บไว้ในเครื่องนี้)`);
+    }
+    $('bulkText').value=''; bulkItems=[]; $('bulkPreview').textContent=''; $('bulkBox').open=false; renderRegList();
+  }catch(e){ setRegMsg('err','นำเข้าไม่สำเร็จ: '+e.message+(String(e.message).includes('unknown')?' — ต้อง Deploy Apps Script เวอร์ชันล่าสุด':'')); }
+  finally{ b.disabled=false; b.textContent='นำเข้า'; }
+};
 $('regSearch').addEventListener('input',renderRegList);
 $('regBtn').onclick=()=>openRegistry();
 $('regClose').onclick=()=>$('regDlg').close();
